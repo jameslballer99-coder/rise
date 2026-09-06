@@ -107,16 +107,6 @@ section.blk > .eyebrow{margin-bottom:8px;display:block}
 .note{color:var(--muted);font-size:13.5px}
 .sub{color:var(--faint);font-size:12.5px;margin-top:6px;line-height:1.45}
 
-.ready .row{display:flex;align-items:center;gap:10px;padding:10px 12px}
-.ready .row + .row{border-top:1px solid var(--line-soft)}
-.ready .lab{flex:1;font-size:13.5px;color:var(--ink-2)}
-.ready .lab small{display:block;color:var(--faint);font-size:11.5px;line-height:1.3}
-.scale{display:flex;gap:4px}
-.scale button{width:30px;height:30px;border-radius:7px;border:1px solid var(--line);
-  font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);background:var(--raise)}
-.scale button[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
-.scale.s10 button{width:23px;height:28px;border-radius:5px;font-size:10.5px;padding:0}
-.scale button.hot[aria-pressed="true"]{background:var(--crit);border-color:var(--crit);color:#fff}
 .numin{width:64px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--raise);
   text-align:right;font-family:"IBM Plex Mono",monospace;font-size:13.5px}
 .alert{display:block;padding:11px 12px;border-radius:var(--r);font-size:13.5px;line-height:1.45;margin-bottom:12px}
@@ -185,14 +175,6 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--surf
 .tab span{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:12px;letter-spacing:.09em;text-transform:uppercase}
 .tab[aria-selected="true"]{color:var(--accent)}
 
-.wkpick{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
-.wkpick::-webkit-scrollbar{display:none}
-.wkpick button{flex:none;width:38px;height:44px;border:1px solid var(--line);border-radius:9px;
-  background:var(--surface);display:grid;place-items:center;position:relative;
-  font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:16px;color:var(--ink-2)}
-.wkpick button u{position:absolute;bottom:5px;width:12px;height:2px;border-radius:2px;background:var(--warn)}
-.wkpick button u.w{background:var(--accent)}
-.wkpick button[aria-current="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
 .daylist .d{display:flex;align-items:center;gap:11px;padding:11px 12px;width:100%;text-align:left}
 .daylist .d + .d{border-top:1px solid var(--line-soft)}
 .daylist .dn{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13px;letter-spacing:.1em;
@@ -290,6 +272,62 @@ details.acc .body p:last-child{margin-bottom:0}
 .syncline{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--faint);padding:2px 0 0}
 .syncdot{width:6px;height:6px;border-radius:50%;background:var(--faint);flex:none}
 .syncdot.on{background:var(--ok)}
+.hi-n .of{font-size:17px;color:var(--faint);font-weight:600;margin-left:3px}
+.hi-n{min-width:auto;text-align:left;display:flex;align-items:baseline;gap:2px}
+.hilist{margin-top:11px;border-top:1px solid var(--line-soft)}
+.hirow{display:flex;align-items:baseline;gap:10px;padding:6px 0;font-size:12.5px;
+  border-bottom:1px solid var(--line-soft)}
+.hirow:last-child{border-bottom:none}
+.hirow span{flex:1;color:var(--ink-2);line-height:1.3}
+.hirow b{font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;color:var(--ok);
+  font-variant-numeric:tabular-nums}
+.hirow b i{font-style:normal;color:var(--faint);font-weight:400}
+
+/* ---------- calendar ---------- */
+.calhead{display:flex;align-items:center;gap:6px;margin-bottom:9px}
+.calhead .calm{flex:1;text-align:center;font-family:"Barlow Condensed",sans-serif;font-weight:600;
+  font-size:19px;letter-spacing:.03em}
+.calhead button{width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--surface);
+  color:var(--muted);font-size:17px;display:grid;place-items:center}
+.calhead button:active{background:var(--line-soft)}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--line-soft);padding:1px}
+.cdow{background:var(--surface);text-align:center;padding:7px 0 6px;
+  font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:12px;letter-spacing:.08em;color:var(--muted)}
+.cday{background:var(--surface);aspect-ratio:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--ink-2);
+  border:none;position:relative;padding:0}
+.cday i{width:15px;height:3px;border-radius:2px;background:var(--line);display:block}
+.cday.out{color:var(--faint);opacity:.45}
+.cday.out i{display:none}
+.cday.rest i{background:var(--line-soft)}
+.cday.todo i{background:var(--line)}
+.cday.part i{background:var(--accent)}
+.cday.done i{background:var(--ok)}
+.cday.done{color:var(--ink)}
+.cday.dl{background:var(--warn-wash)}
+.cday.win{box-shadow:inset 0 0 0 2px var(--accent)}
+.cday.now{font-weight:600;color:var(--accent)}
+.cday.now::after{content:"";position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:50%;
+  background:var(--accent)}
+.callegend{display:flex;flex-wrap:wrap;gap:10px;margin-top:9px;font-size:11.5px;color:var(--muted)}
+.callegend span{display:flex;align-items:center;gap:5px}
+.callegend .k{width:13px;height:3px;border-radius:2px;background:var(--line);display:block}
+.callegend .k.done{background:var(--ok)}
+.callegend .k.part{background:var(--accent)}
+.callegend .k.todo{background:var(--line)}
+.callegend .k.win{height:11px;width:11px;border-radius:3px;background:transparent;box-shadow:inset 0 0 0 2px var(--accent)}
+.callegend .k.dl{height:11px;width:11px;border-radius:3px;background:var(--warn-wash);
+  box-shadow:inset 0 0 0 1px var(--warn)}
+
+/* ---------- rep-counted sets ---------- */
+.reptot{text-align:right;flex:none;font-family:"Barlow Condensed",sans-serif}
+.reptot b{display:block;font-size:24px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;
+  color:var(--accent)}
+.reptot small{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--faint);font-weight:600}
+.repcell{display:flex;flex-direction:column;align-items:center;gap:3px}
+.repcell small{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:11px;color:var(--faint)}
+.repcell input{width:52px;height:38px;border:1px solid var(--line);border-radius:8px;background:var(--raise);
+  text-align:center;font-family:"IBM Plex Mono",monospace;font-size:15px;padding:0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -321,9 +359,9 @@ details.acc .body p:last-child{margin-bottom:0}
     <button class="tab" data-tab="today" aria-selected="true">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="19" cy="16" r="3"/></svg>
       <span>Today</span></button>
-    <button class="tab" data-tab="week" aria-selected="false">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-      <span>Week</span></button>
+    <button class="tab" data-tab="cal" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M7.5 14h2M14.5 14h2M7.5 17.5h2"/></svg>
+      <span>Calendar</span></button>
     <button class="tab" data-tab="prog" aria-selected="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16"/><path d="M8 15l3.5-4.5L15 13l4-6"/></svg>
       <span>Progress</span></button>
@@ -368,7 +406,7 @@ var db = null, saveTimers = {};
 
 function blankWeek() { return { updatedAt: 0, d: {}, log: {} }; }
 function wk(n) { if (!S.weeks[n]) S.weeks[n] = blankWeek(); return S.weeks[n]; }
-function day(n, dk) { var w = wk(n); if (!w.d[dk]) w.d[dk] = { s: {}, ld: {}, hi: null, rd: {}, note: "", done: false }; return w.d[dk]; }
+function day(n, dk) { var w = wk(n); if (!w.d[dk]) w.d[dk] = { s: {}, ld: {}, reps: {}, hi: null, note: "", done: false }; return w.d[dk]; }
 function wid(n) { return "w" + (n < 10 ? "0" + n : n); }
 
 function loadLocal() {
@@ -557,6 +595,50 @@ function isoDate(d) {
 
 var SETRE = /(\d+)\s*[x×]\s*(\d+)/;
 
+/* Which drills cost a hard jump, and how many per set.
+   Matched against the programme's own wording. Pogos, snap-downs, bounds,
+   altitude landings, jump squats and sprints are tissue-tolerance work and
+   cost nothing. This reproduces the workbook's own weekly totals on 67 of its
+   72 scheduled days; the handful that differ are inconsistencies in the sheet
+   itself, and this errs toward counting rather than missing them. */
+var HI_PAT = /cmj|countermovement|approach jump|approach touch|broad jump|rim.?touch|box jump|depth jump|hurdle jump|dunk attempt|attempts|max touch|trap-bar jump/i;
+var LI_PAT = /jump squat|pogo|snap.?down|bound|altitude landing|sprint/i;
+
+/* Contacts earned by ONE set of this line. */
+function hiPerSet(line) {
+  if (LI_PAT.test(line) || !HI_PAT.test(line)) return 0;
+  var m = line.match(SETRE);
+  if (m) return +m[2];
+  var n = line.match(/([0-9]+)/);
+  return n ? +n[1] : 0;
+}
+
+/* Upper body — two sessions, Push on Monday and Pull on Wednesday.
+   Four sets on everything, every week: upper work does not load the Achilles,
+   so it is not what the deload weeks exist to protect. */
+var UPPER = {
+  A: {
+    title: "Push", meta: "~30 min",
+    ex: [
+      { name: "Bench press", sets: 4, reps: "8" },
+      { name: "Incline bench press", sets: 4, reps: "8" },
+      { name: "Shoulder press", sets: 4, reps: "8" },
+      { name: "Lateral raise", sets: 4, reps: "10" },
+      { name: "Sit-ups", sets: 4, reps: "25" }
+    ]
+  },
+  B: {
+    title: "Pull", meta: "~35 min",
+    ex: [
+      { name: "Pull-ups", sets: 4, reps: null, count: true, note: "log every rep" },
+      { name: "Chest row", sets: 4, reps: "10" },
+      { name: "Single-arm DB row", sets: 4, reps: "10 / side" },
+      { name: "Back extension", sets: 4, reps: "12" },
+      { name: "Lower-ab leg raise", sets: 4, reps: "15" }
+    ]
+  }
+};
+
 function classify(line) {
   if (/^[A-Z][A-Z0-9-]{3,}(\s|$)/.test(line) && !SETRE.test(line)) return "head";
   if (/^(cut |stop |log |zero |then |full rest|no lifting|no max|shooting \+|or full rest|movement only)/i.test(line)) return "note";
@@ -599,7 +681,8 @@ function buildSessions(week, st) {
   }
   function items(lines, id) {
     return lines.map(function (line, i) {
-      var kind = classify(line);
+      var per = hiPerSet(line);
+      var kind = per > 0 ? "ex" : classify(line);   // anything that scores is trackable
       if (kind !== "ex") return { kind: kind, text: line };
       var p = parseLine(line), tag = loadTag(line);
       if (tag) {
@@ -607,25 +690,21 @@ function buildSessions(week, st) {
         p.kg = tag.kg; p.pct = tag.pct;
         p.text = line.replace(/\s*\(Strength tab\)/i, "").replace(SETRE, tag.scheme || "$&");
       }
-      p.kind = "ex"; p.key = id + ":" + i;
+      p.kind = "ex"; p.key = id + ":" + i; p.hiPer = per;
       return p;
     });
   }
   function upper(letter, id) {
-    var lib = P.upper[letter]; if (!lib) return null;
-    var cap = deload ? 2 : (lateBlock ? (letter === "B" ? 3 : 2) : 99);
+    var lib = UPPER[letter]; if (!lib) return null;
+    var cap = 99;
     return {
-      id: id,
-      title: "Upper " + letter + " · " + lib.title.split("(")[0].replace(/UPPER [ABC]\s*[—-]\s*/i, "").trim()
-        .toLowerCase().replace(/(^|[\s&])([a-z])/g, function (m, a, c) { return a + c.toUpperCase(); }),
-      meta: (lib.title.match(/~\s*\d+\s*min/) || [""])[0],
-      hi: 0,
+      id: id, title: lib.title, meta: lib.meta, hi: 0,
       items: lib.ex.map(function (e, i) {
-        var n = Math.min(libSets(e.sets), cap);
+        var n = Math.min(e.sets, cap);
         return {
           kind: "ex", key: id + ":" + i, text: e.name, sets: n, hasSets: true,
-          reps: (String(e.sets).match(SETRE) || [])[2] || null,
-          detail: (n < libSets(e.sets) ? n + " x " + (String(e.sets).match(SETRE) || [0, 0, ""])[2] : e.sets) + "  ·  " + e.load
+          reps: e.reps, count: !!e.count,
+          detail: n + " x " + (e.count ? "max" : e.reps) + (e.note ? "  ·  " + e.note : "")
         };
       })
     };
@@ -647,36 +726,66 @@ function buildSessions(week, st) {
   out.fri.push({ id: "fri", title: "Rest", meta: "protected", hi: 0, items: items(W.fri, "fri") });
 
   out.sat.push({ id: "sat-lower", title: /DUNK WINDOW|TEST/i.test(W.sat_lower.join(" ")) ? "Dunk window" : "Lower power", meta: st.row.tb_scheme + " trap-bar", hi: W.sat_hi || 0, items: items(W.sat_lower, "sat-lower") });
-  if (/Upper C/i.test(W.sat_upper)) out.sat.push(upper("C", "sat-upperC"));
-  else if (W.sat_upper) out.sat.push({ id: "sat-up", title: "Upper C", meta: "optional", hi: 0, items: items(W.sat_upper.split("\n").join(" ").replace(/\s+/g, " ").split("|"), "sat-up") });
 
-  out.sun.push({ id: "sun", title: "Basketball", meta: "75 min cap · no max jumping", hi: 0, items: items(W.sun, "sun") });
+  out.sun.push({
+    id: "sun", title: "Rest", meta: "free day", hi: 0,
+    items: [{ kind: "note", text: "No session scheduled. If you play, keep it easy and off the max jumps — Tuesday is the day that needs your legs." }]
+  });
 
   Object.keys(out).forEach(function (k) { out[k] = out[k].filter(Boolean); });
   return out;
 }
 
+/* Planned contacts for a day: every scoring set in the session. */
 function plannedHI(week, dk) {
-  var W = P.weeks[week - 1];
-  if (dk === "tue") return W.tue_hi || 0;
-  if (dk === "thu") return W.thu_hi || 0;
-  if (dk === "sat") return W.sat_hi || 0;
-  return 0;
-}
-function weekHI(week) {
-  var tot = 0, any = false;
-  DAYS.forEach(function (dk) {
-    var d = wk(week).d[dk];
-    if (d && d.hi !== null && d.hi !== undefined) { tot += d.hi; any = true; }
-    else tot += plannedHI(week, dk);
+  var tot = 0;
+  sessionsFor(week)[dk].forEach(function (s) {
+    s.items.forEach(function (it) { if (it.hiPer) tot += it.hiPer * (it.hasSets ? it.sets : 1); });
   });
-  return { total: tot, logged: any };
+  return tot;
+}
+
+/* Contacts actually earned: only the sets you have ticked off. */
+function actualHI(week, dk) {
+  var rec = wk(week).d[dk], tot = 0;
+  if (!rec) return 0;
+  sessionsFor(week)[dk].forEach(function (s) {
+    s.items.forEach(function (it) {
+      if (!it.hiPer) return;
+      var arr = rec.s[it.key] || [];
+      var n = it.hasSets ? it.sets : 1;
+      for (var i = 0; i < n; i++) if (arr[i]) tot += it.hiPer;
+    });
+  });
+  return tot;
+}
+
+/* Which drills contributed, for the breakdown under the counter. */
+function hiBreakdown(week, dk) {
+  var rec = wk(week).d[dk], out = [];
+  sessionsFor(week)[dk].forEach(function (s) {
+    s.items.forEach(function (it) {
+      if (!it.hiPer) return;
+      var arr = (rec && rec.s[it.key]) || [];
+      var n = it.hasSets ? it.sets : 1, done = 0;
+      for (var i = 0; i < n; i++) if (arr[i]) done++;
+      out.push({ name: it.text, done: done * it.hiPer, plan: n * it.hiPer });
+    });
+  });
+  return out;
+}
+
+function weekHI(week) {
+  var plan = 0, act = 0;
+  DAYS.forEach(function (dk) { plan += plannedHI(week, dk); act += actualHI(week, dk); });
+  return { plan: plan, total: act };
 }
 function loggedHI(week) {
   var t = 0;
-  DAYS.forEach(function (dk) { var d = wk(week).d[dk]; if (d && d.hi != null) t += d.hi; });
+  DAYS.forEach(function (dk) { t += actualHI(week, dk); });
   return t;
 }
+
 function dayProgress(week, dk) {
   var ss = sessionsFor(week)[dk], done = 0, tot = 0;
   ss.forEach(function (s) {
@@ -684,8 +793,11 @@ function dayProgress(week, dk) {
       if (it.kind !== "ex") return;
       var n = it.hasSets ? it.sets : 1;
       tot += n;
-      var arr = (wk(week).d[dk] && wk(week).d[dk].s[it.key]) || [];
-      for (var i = 0; i < n; i++) if (arr[i]) done++;
+      var rec = wk(week).d[dk];
+      var arr = it.count
+        ? ((rec && rec.reps && rec.reps[it.key]) || [])
+        : ((rec && rec.s[it.key]) || []);
+      for (var i = 0; i < n; i++) if (it.count ? (+arr[i] > 0) : arr[i]) done++;
     });
   });
   return { done: done, total: tot };
@@ -751,6 +863,25 @@ function itemHTML(week, dk, it) {
   var D = day(week, dk), arr = D.s[it.key] || [], ld = D.ld[it.key] || {};
   var name = esc(it.text);
   if (it.kg) name += ' <span class="load">' + fmtKg(it.kg) + " kg</span>";
+
+  /* Rep-counted work (pull-ups): a number box per set and a running session total. */
+  if (it.count) {
+    var reps = D.reps && D.reps[it.key] ? D.reps[it.key] : [];
+    var tot = 0;
+    for (var q = 0; q < it.sets; q++) tot += (+reps[q] || 0);
+    var c = '<div class="ex"><div class="ex-top"><div class="ex-nm">' + name +
+      '<div class="pre">' + esc(it.detail || "") + "</div></div>" +
+      '<div class="reptot"><b data-tot="' + it.key + '">' + tot + "</b><small>total</small></div></div>" +
+      '<div class="setrow">';
+    for (var j = 0; j < it.sets; j++) {
+      c += '<span class="repcell"><small>' + (j + 1) + "</small>" +
+        '<input type="number" inputmode="numeric" min="0" data-act="reps" data-k="' + it.key +
+        '" data-i="' + j + '" value="' + (reps[j] != null ? reps[j] : "") +
+        '" placeholder="–" aria-label="Set ' + (j + 1) + ' reps"></span>';
+    }
+    return c + "</div></div>";
+  }
+
   var h = '<div class="ex"><div class="ex-top">';
   if (!it.hasSets) {
     h += '<button class="tick" data-act="set" data-k="' + it.key + '" data-i="0" aria-pressed="' + (arr[0] ? "true" : "false") + '">&#10003;</button>';
@@ -776,35 +907,34 @@ function itemHTML(week, dk, it) {
 }
 
 function hiCardHTML(week, dk) {
-  var plan = plannedHI(week, dk), D = day(week, dk);
-  var val = D.hi != null ? D.hi : plan;
+  var plan = plannedHI(week, dk), got = actualHI(week, dk);
   var W = P.weeks[week - 1], cap = W.cap || 0;
-  var tot = loggedHI(week);
+  var tot = loggedHI(week), wplan = weekHI(week).plan;
   var pct = cap ? Math.min(100, (tot / cap) * 100) : 0;
   var overPct = cap && tot > cap ? Math.min(100, ((tot - cap) / cap) * 100) : 0;
-  return '<section class="blk"><span class="eyebrow">High-intensity contacts</span>' +
-    '<div class="panel"><div class="hi"><div class="hi-top">' +
-    '<button class="stepbtn" data-act="hi" data-v="-1" aria-label="One fewer contact">&minus;</button>' +
-    '<div class="hi-n">' + val + "</div>" +
-    '<button class="stepbtn" data-act="hi" data-v="1" aria-label="One more contact">+</button>' +
-    '<div class="hi-lab">' + (D.hi != null ? "logged today" : "planned today") + " · " + plan + " on the sheet<br>" +
-    "Approach jumps, depth &amp; box jumps, max CMJ, rim touches, dunk attempts.</div></div>" +
-    '<div class="bar"><i class="fill" style="width:' + pct.toFixed(1) + '%"></i><i class="over" style="width:' + overPct.toFixed(1) + '%"></i></div>' +
-    '<div class="barlab"><span>' + tot + " logged this week</span><span>cap " + cap + "</span></div>" +
-    "</div></div></section>";
-}
+  var left = cap - tot;
 
-function readyHTML(week, dk) {
-  var rd = day(week, dk).rd || {};
-  var h = '<section class="blk"><span class="eyebrow">Morning check</span><div class="panel ready">';
-  h += '<div class="row"><div class="lab">AM tendon stiffness<small>Achilles + patellar, first minute out of bed</small></div><div class="scale">';
-  for (var i = 1; i <= 5; i++) h += '<button class="' + (i >= 4 ? "hot" : "") + '" data-act="rd" data-f="st" data-v="' + i + '" aria-pressed="' + (rd.st === i ? "true" : "false") + '">' + i + "</button>";
-  h += "</div></div>";
-  h += '<div class="row"><div class="lab">Leg soreness</div><div class="scale s10">';
-  for (var j = 1; j <= 10; j++) h += '<button data-act="rd" data-f="so" data-v="' + j + '" aria-pressed="' + (rd.so === j ? "true" : "false") + '">' + j + "</button>";
-  h += "</div></div>";
-  h += '<div class="row"><div class="lab">Sleep</div><input class="numin" type="number" inputmode="decimal" step="0.5" data-act="rd" data-f="sl" value="' + (rd.sl != null ? rd.sl : "") + '" placeholder="h" aria-label="Hours slept"></div>';
-  return h + "</div></section>";
+  var rows = hiBreakdown(week, dk).map(function (r) {
+    return '<div class="hirow"><span>' + esc(r.name) + "</span><b>" + r.done + "<i>/" + r.plan + "</i></b></div>";
+  }).join("");
+
+  return '<section class="blk"><span class="eyebrow">Hard jumps today</span>' +
+    '<div class="panel"><div class="hi"><div class="hi-top">' +
+    '<div class="hi-n">' + got + '<span class="of">/ ' + plan + "</span></div>" +
+    '<div class="hi-lab">Counted automatically from the sets you tick off. ' +
+    (got >= plan && plan > 0 ? "Session complete." : "The plan has " + plan + " today.") + "</div></div>" +
+    (rows ? '<div class="hilist">' + rows + "</div>" : "") +
+    '<div class="bar"><i class="fill" style="width:' + pct.toFixed(1) + '%"></i><i class="over" style="width:' + overPct.toFixed(1) + '%"></i></div>' +
+    '<div class="barlab"><span>' + tot + " this week</span><span>" +
+    (left >= 0 ? left + " left of " + cap : Math.abs(left) + " over " + cap) + "</span></div>" +
+    (wplan > cap ? '<div class="sub" style="margin-top:7px">Note: the plan as written totals ' + wplan +
+      " this week against its own cap of " + cap + ". Trim Thursday if you want to stay under.</div>" : "") +
+    '<details class="acc" style="border:none;margin-top:4px"><summary style="padding:8px 0;font-size:13px">What counts, and why it is capped</summary>' +
+    '<div class="body" style="padding:0 0 6px">' +
+    "<p>A hard jump is any all-out takeoff: approach jumps, rim touches, dunk attempts, max standing jumps, box and depth jumps. Pogos, bounds, sprints, jump squats and landing drills do not count — they are easy on the tendon.</p>" +
+    "<p>Your Achilles and patellar tendons take 8 to 12 weeks to adapt, far slower than muscle. Hard jumps are what load them, so the number of them per week decides whether you build or break down. Every week has a ceiling for that reason.</p>" +
+    "<p>If the week runs over, cut Thursday first, then Tuesday's extra jumps. Never cut a deload week to make room.</p>" +
+    "</div></details></div></div></section>";
 }
 
 function viewToday() {
@@ -812,10 +942,6 @@ function viewToday() {
   var ss = sessionsFor(week)[dk], D = day(week, dk);
   var h = "";
 
-  var rd = D.rd || {};
-  if (rd.st >= 4) {
-    h += '<div class="alert crit"><b>Stiffness ' + rd.st + '.</b> If a 4 or 5 has persisted past 48 hours, the next jump session becomes a mobility session. Do not push through it.</div>';
-  }
   if (/DELOAD/i.test(W.load)) {
     h += '<div class="alert warn"><b>Deload week.</b> Loads drop to ' + Math.round(P.strength[week - 1].squat_pct * 100) + '%, jump volume roughly halves. This is a real down week, not a copy of last week.</div>';
   }
@@ -832,17 +958,15 @@ function viewToday() {
     h += "</div>";
   });
 
-  if (plannedHI(week, dk) > 0 || D.hi != null) h += hiCardHTML(week, dk);
+  if (plannedHI(week, dk) > 0) h += hiCardHTML(week, dk);
 
   h += '<section class="blk"><span class="eyebrow">Rest timer</span><div class="panel"><div class="hi">' +
     '<div style="display:flex;gap:8px">' +
+    '<button class="btn" data-act="timer" data-s="60">1:00</button>' +
+    '<button class="btn" data-act="timer" data-s="120">2:00</button>' +
     '<button class="btn" data-act="timer" data-s="180">3:00</button>' +
-    '<button class="btn" data-act="timer" data-s="150">2:30</button>' +
-    '<button class="btn" data-act="timer" data-s="90">1:30</button>' +
     "</div></div></div>" +
     '<div class="sub">3:00 between max approach jumps and dunk attempts. It feels absurd and it is the difference between training your peak and training your fatigue.</div></section>';
-
-  h += readyHTML(week, dk);
 
   h += '<section class="blk"><span class="eyebrow">Session notes</span>' +
     '<textarea class="txtin" data-act="note" placeholder="How the jumps felt, bar speed, anything that hurt.">' + esc(D.note || "") + "</textarea></section>";
@@ -857,19 +981,82 @@ function viewToday() {
 
 /* ---------------- render: Week ---------------- */
 
-function viewWeek() {
-  var week = S.ui.pickW, W = P.weeks[week - 1], st = strengthFor(week);
-  var tp = todayPos();
-  var h = '<div class="wkpick" id="wkpick">';
-  for (var n = 1; n <= 24; n++) {
-    var dl = /DELOAD/i.test(P.weeks[n - 1].load);
-    h += '<button data-act="pickw" data-w="' + n + '" aria-current="' + (n === week ? "true" : "false") + '">' + n +
-      (WINDOWWK.indexOf(n) >= 0 ? '<u class="w"></u>' : (dl ? "<u></u>" : "")) + "</button>";
-  }
-  h += "</div>";
+/* ---------------- render: Calendar ---------------- */
 
+var MONTHS = ["January", "February", "March", "April", "May", "June",
+              "July", "August", "September", "October", "November", "December"];
+
+/* Which programme day, if any, falls on this date. */
+function posForDate(dt) {
+  var sd = startDate(); if (!sd) return null;
+  var diff = Math.round((new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()) - sd) / 86400000);
+  if (diff < 0) return null;
+  var w = Math.floor(diff / 7) + 1;
+  if (w > 24) return null;
+  return { w: w, d: DAYS[diff % 7] };
+}
+
+function viewCal() {
+  var tp = todayPos();
+  var cur = S.ui.month ? new Date(+S.ui.month.split("-")[0], +S.ui.month.split("-")[1] - 1, 1)
+                       : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  var y = cur.getFullYear(), mo = cur.getMonth();
+  var first = new Date(y, mo, 1), lead = (first.getDay() + 6) % 7;      // Monday-first
+  var ndays = new Date(y, mo + 1, 0).getDate();
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+
+  var h = '<section class="blk"><div class="calhead">' +
+    '<button data-act="mon" data-v="-1" aria-label="Previous month">&#8249;</button>' +
+    '<span class="calm">' + MONTHS[mo] + " " + y + "</span>" +
+    '<button data-act="mon" data-v="1" aria-label="Next month">&#8250;</button>' +
+    "</div>";
+
+  h += '<div class="panel"><div class="calgrid">';
+  ["M", "T", "W", "T", "F", "S", "S"].forEach(function (d, i) {
+    h += '<span class="cdow"' + (i > 4 ? ' style="color:var(--faint)"' : "") + ">" + d + "</span>";
+  });
+  for (var i = 0; i < lead; i++) h += '<span class="cday out"></span>';
+
+  var doneThis = 0, schedThis = 0;
+  for (var dnum = 1; dnum <= ndays; dnum++) {
+    var dt = new Date(y, mo, dnum);
+    var pos = posForDate(dt);
+    var isToday = dt.getTime() === today.getTime();
+    if (!pos) {
+      h += '<span class="cday out' + (isToday ? " now" : "") + '">' + dnum + "</span>";
+      continue;
+    }
+    var rec = S.weeks[pos.w] && S.weeks[pos.w].d && S.weeks[pos.w].d[pos.d];
+    var pr = dayProgress(pos.w, pos.d);
+    var rest = pos.d === "fri" || pos.d === "sun";
+    var state = rest ? "rest"
+      : (rec && rec.done) ? "done"
+      : pr.done > 0 ? "part"
+      : "todo";
+    if (!rest) { schedThis++; if (state === "done") doneThis++; }
+    var win = WINDOWWK.indexOf(pos.w) >= 0 && pos.d === "sat";
+    var dl = /DELOAD/i.test(P.weeks[pos.w - 1].load);
+    h += '<button class="cday ' + state + (isToday ? " now" : "") + (win ? " win" : "") + (dl ? " dl" : "") +
+      '" data-act="goday" data-w="' + pos.w + '" data-d="' + pos.d + '"' +
+      ' aria-label="' + dnum + " " + MONTHS[mo] + ", week " + pos.w + " " + DAYFULL[pos.d] + '">' +
+      dnum + '<i></i></button>';
+  }
+  var trail = (7 - ((lead + ndays) % 7)) % 7;
+  for (var z = 0; z < trail; z++) h += '<span class="cday out"></span>';
+  h += "</div></div>";
+
+  h += '<div class="callegend">' +
+    '<span><i class="k done"></i>done</span>' +
+    '<span><i class="k part"></i>started</span>' +
+    '<span><i class="k todo"></i>to do</span>' +
+    '<span><i class="k win"></i>dunk window</span>' +
+    '<span><i class="k dl"></i>deload week</span></div>';
+  h += '<div class="sub">' + doneThis + " of " + schedThis + " sessions completed this month. Tap any day to open it.</div></section>";
+
+  /* the selected week, underneath */
+  var week = S.ui.pickW, W = P.weeks[week - 1], st = strengthFor(week);
   var hi = weekHI(week), cap = W.cap;
-  h += '<section class="blk"><div class="panel lift"><div class="hi">' +
+  h += '<section class="blk"><span class="eyebrow">Week ' + week + '</span><div class="panel lift"><div class="hi">' +
     '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">' +
     '<span class="chip phase">' + esc(W.phase) + "</span>" +
     '<span class="chip ' + (/DELOAD/i.test(W.load) ? "deload" : "build") + '">' + esc(W.load) + "</span>" +
@@ -877,7 +1064,7 @@ function viewWeek() {
     '<div style="margin-top:9px;font-size:13.5px;line-height:1.5">' + esc(W.focus) + "</div>" +
     '<div class="bar"><i class="fill" style="width:' + Math.min(100, (hi.total / cap) * 100).toFixed(1) + '%"></i>' +
     (hi.total > cap ? '<i class="over" style="width:' + Math.min(100, ((hi.total - cap) / cap) * 100).toFixed(1) + '%"></i>' : "") + "</div>" +
-    '<div class="barlab"><span>' + hi.total + " HI contacts " + (hi.logged ? "(part logged)" : "(planned)") + "</span><span>cap " + cap + "</span></div>" +
+    '<div class="barlab"><span>' + hi.total + " of " + hi.plan + " hard jumps done</span><span>cap " + cap + "</span></div>" +
     "</div></div></section>";
 
   h += '<section class="blk"><span class="eyebrow">Days</span><div class="panel daylist">';
@@ -887,10 +1074,12 @@ function viewWeek() {
     var d = dateOf(week, dk);
     var isToday = tp && tp.w === week && tp.d === dk;
     var hip = plannedHI(week, dk);
+    var hact = actualHI(week, dk);
     h += '<button class="d' + (isToday ? " today" : "") + '" data-act="goday" data-w="' + week + '" data-d="' + dk + '">' +
       ring(pr.done, pr.total) +
       '<span class="dn">' + DAYNM[dk] + "</span>" +
-      '<span class="dt">' + esc(titles) + "<s>" + (d ? isoDate(d) + " · " : "") + (hip ? hip + " HI" : "no HI") + "</s></span>" +
+      '<span class="dt">' + esc(titles) + "<s>" + (d ? isoDate(d) + " · " : "") +
+      (hip ? hact + "/" + hip + " hard jumps" : "no jumps") + "</s></span>" +
       "</button>";
   });
   h += "</div></section>";
@@ -1045,17 +1234,11 @@ function viewProg() {
     '<div class="sub">Retest with a 3–5 rep max on weeks 9 and 17 and enter it in settings — every prescribed load recalculates. Never 1RM test.</div></section>';
 
   h += '<section class="blk"><span class="eyebrow">Jump log</span><div class="panel scrollx"><table class="data">' +
-    "<thead><tr><th>Wk</th><th>CMJ</th><th>App.</th><th>Vert</th><th>Gap</th><th>Stiff</th><th>Sleep</th><th>HI</th></tr></thead><tbody>";
+    "<thead><tr><th>Wk</th><th>CMJ</th><th>App.</th><th>Vert</th><th>Gap</th><th>Jumps</th></tr></thead><tbody>";
   var tp = todayPos();
   for (var n = 1; n <= 24; n++) {
     var lg = (S.weeks[n] && S.weeks[n].log) || {};
-    var st = [], sl = [];
-    DAYS.forEach(function (dk) {
-      var dd = S.weeks[n] && S.weeks[n].d && S.weeks[n].d[dk];
-      if (dd && dd.rd) { if (dd.rd.st) st.push(dd.rd.st); if (dd.rd.sl) sl.push(+dd.rd.sl); }
-    });
-    function avg(a) { return a.length ? (a.reduce(function (x, y) { return x + y; }, 0) / a.length) : null; }
-    var av = avg(st), asl = avg(sl), lh = loggedHI(n);
+    var lh = loggedHI(n);
     var r = (lg.reach || reach);
     h += '<tr class="' + (TESTWK.indexOf(n) >= 0 ? "test " : "") + (tp && tp.w === n ? "now" : "") + '">' +
       "<td>" + n + "</td>" +
@@ -1063,8 +1246,6 @@ function viewProg() {
       "<td" + (lg.app ? "" : ' class="empty"') + ">" + (lg.app || "–") + "</td>" +
       "<td" + (lg.app ? "" : ' class="empty"') + ">" + (lg.app ? lg.app - r : "–") + "</td>" +
       "<td" + (lg.app ? "" : ' class="empty"') + ">" + (lg.app ? dunk - lg.app : "–") + "</td>" +
-      "<td" + (av ? "" : ' class="empty"') + ">" + (av ? av.toFixed(1) : "–") + "</td>" +
-      "<td" + (asl ? "" : ' class="empty"') + ">" + (asl ? asl.toFixed(1) : "–") + "</td>" +
       "<td" + (lh ? "" : ' class="empty"') + ">" + (lh || "–") + "</td></tr>";
   }
   h += "</tbody></table></div></section>";
@@ -1095,14 +1276,17 @@ function viewGuide() {
   });
   h += "</div><div class=\"sub\">If you substitute a drill, match the HI count, not the exercise name.</div></section>";
 
-  ["A", "B", "C"].forEach(function (k) {
-    var lib = P.upper[k]; if (!lib) return;
-    var t = lib.title.replace(/UPPER [ABC]\s*[—-]\s*/i, "");
-    h += '<section class="blk"><span class="eyebrow">Upper ' + k + " · " + esc(t.split("(")[0].trim()) + '</span><div class="panel exlist">';
+  ["A", "B"].forEach(function (k) {
+    var lib = UPPER[k];
+    h += '<section class="blk"><span class="eyebrow">Upper ' + k + " · " + esc(lib.title) +
+      '</span><div class="panel exlist">';
     lib.ex.forEach(function (e) {
-      h += '<div class="r"><span class="n">' + esc(e.name) + "<em>" + esc(e.purpose) + '</em></span><span class="s">' + esc(e.sets) + '</span><span class="l">' + esc(e.load) + "</span></div>";
+      h += '<div class="r"><span class="n">' + esc(e.name) + (e.note ? "<em>" + esc(e.note) + "</em>" : "") +
+        '</span><span class="s">' + e.sets + " x " + (e.count ? "max" : esc(e.reps)) + "</span></div>";
     });
-    h += "</div>" + (lib.title.indexOf("(") > 0 ? '<div class="sub">' + esc(lib.title.slice(lib.title.indexOf("(") + 1).replace(")", "")) + "</div>" : "") + "</section>";
+    h += "</div><div class=\"sub\">" + (k === "A" ? "Monday, after the lower session. Leave at least 20 minutes between them."
+      : "Wednesday, on its own. The only day with no lower-body impact.") +
+      " Deload weeks and weeks 17-24 drop every exercise to 2 sets.</div></section>";
   });
 
   h += '<section class="blk"><span class="eyebrow">Rules &amp; recovery</span><div class="panel">';
@@ -1189,16 +1373,12 @@ function render() {
   paintHeader();
   var v = el("view"), y = window.scrollY;
   v.innerHTML = S.ui.tab === "today" ? viewToday()
-    : S.ui.tab === "week" ? viewWeek()
+    : S.ui.tab === "cal" ? viewCal()
       : S.ui.tab === "prog" ? viewProg() : viewGuide();
   Array.prototype.forEach.call(document.querySelectorAll("#tabs .tab"), function (b) {
     b.setAttribute("aria-selected", b.dataset.tab === S.ui.tab ? "true" : "false");
   });
   window.scrollTo(0, Math.min(y, document.body.scrollHeight));
-  if (S.ui.tab === "week") {
-    var pk = el("wkpick"), cur = pk && pk.querySelector('[aria-current="true"]');
-    if (cur) pk.scrollLeft = Math.max(0, cur.offsetLeft - pk.clientWidth / 2 + 19);
-  }
   paintTimer();
 }
 
@@ -1237,24 +1417,8 @@ document.addEventListener("click", function (ev) {
       var D = day(S.ui.w, S.ui.d), k = b.dataset.k, i = +b.dataset.i;
       var arr = D.s[k] || (D.s[k] = []);
       arr[i] = !arr[i];
-      if (b.classList.contains("setpill")) b.dataset.on = arr[i] ? 1 : 0;
-      else b.setAttribute("aria-pressed", arr[i] ? "true" : "false");
       touchWeek(S.ui.w);
-      break;
-    }
-    case "hi": {
-      var Dh = day(S.ui.w, S.ui.d);
-      var cur = Dh.hi != null ? Dh.hi : plannedHI(S.ui.w, S.ui.d);
-      Dh.hi = Math.max(0, cur + +b.dataset.v);
-      touchWeek(S.ui.w); render();
-      break;
-    }
-    case "rd": {
-      var Dr = day(S.ui.w, S.ui.d);
-      Dr.rd = Dr.rd || {};
-      var f = b.dataset.f, v = +b.dataset.v;
-      Dr.rd[f] = Dr.rd[f] === v ? null : v;
-      touchWeek(S.ui.w); render();
+      render();
       break;
     }
     case "timer": startTimer(+b.dataset.s); break;
@@ -1262,12 +1426,19 @@ document.addEventListener("click", function (ev) {
     case "finish": {
       var Df = day(S.ui.w, S.ui.d);
       Df.done = !Df.done;
-      if (Df.done && Df.hi == null) Df.hi = plannedHI(S.ui.w, S.ui.d);
       touchWeek(S.ui.w); render();
       break;
     }
     case "pickw": S.ui.pickW = +b.dataset.w; saveLocal(); render(); break;
-    case "goday": S.ui.w = +b.dataset.w; S.ui.d = b.dataset.d; S.ui.tab = "today"; saveLocal(); render(); break;
+    case "mon": {
+      var base = S.ui.month ? new Date(+S.ui.month.split("-")[0], +S.ui.month.split("-")[1] - 1, 1)
+                            : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      base.setMonth(base.getMonth() + (+b.dataset.v));
+      S.ui.month = base.getFullYear() + "-" + String(base.getMonth() + 1).padStart(2, "0");
+      saveLocal(); render();
+      break;
+    }
+    case "goday": S.ui.w = +b.dataset.w; S.ui.d = b.dataset.d; S.ui.pickW = S.ui.w; S.ui.tab = "today"; saveLocal(); render(); break;
     case "stage": {
       var L = wk(S.ui.pickW); L.log = L.log || {};
       var sv = +b.dataset.s;
@@ -1291,9 +1462,17 @@ document.addEventListener("change", function (ev) {
     D.ld[t.dataset.k] = D.ld[t.dataset.k] || {};
     D.ld[t.dataset.k][t.dataset.f] = val;
     touchWeek(S.ui.w);
-  } else if (act === "rd") {
-    var Dr = day(S.ui.w, S.ui.d); Dr.rd = Dr.rd || {}; Dr.rd.sl = val;
+  } else if (act === "reps") {
+    var Dp = day(S.ui.w, S.ui.d), rk = t.dataset.k;
+    Dp.reps = Dp.reps || {};
+    Dp.reps[rk] = Dp.reps[rk] || [];
+    Dp.reps[rk][+t.dataset.i] = val;
     touchWeek(S.ui.w);
+    // update the running total in place — a re-render here would steal focus mid-entry
+    var totEl = document.querySelector('[data-tot="' + rk + '"]');
+    if (totEl) {
+      totEl.textContent = Dp.reps[rk].reduce(function (a, b) { return a + (+b || 0); }, 0);
+    }
   } else if (act === "log") {
     var L = wk(S.ui.pickW); L.log = L.log || {};
     L.log[t.dataset.f] = val;
