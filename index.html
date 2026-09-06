@@ -138,9 +138,10 @@ section.blk > .eyebrow{margin-bottom:8px;display:block}
 .exnote i{width:2px;background:var(--line);border-radius:2px;flex:none}
 .exhead{padding:10px 12px;background:var(--accent-wash);color:var(--accent);
   font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:16px;letter-spacing:.08em}
-.loadin{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:var(--faint)}
-.loadin input{width:56px;padding:4px 7px;border:1px solid var(--line);border-radius:6px;background:var(--raise);
-  text-align:right;font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+.loadin{display:flex;align-items:center;gap:6px;margin-top:9px;font-size:12px;color:var(--faint)}
+.loadin input{width:66px;padding:7px 8px;border:1px solid var(--line);border-radius:7px;background:var(--raise);
+  text-align:right;font-family:"IBM Plex Mono",monospace;font-size:14px}
+.loadin em{font-style:normal;color:var(--faint);font-size:11.5px;line-height:1.3}
 
 .hi{padding:12px}
 .hi-top{display:flex;align-items:center;gap:10px}
@@ -282,6 +283,22 @@ details.acc .body p:last-child{margin-bottom:0}
 .hirow b{font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;color:var(--ok);
   font-variant-numeric:tabular-nums}
 .hirow b i{font-style:normal;color:var(--faint);font-weight:400}
+
+/* ---------- daily line ---------- */
+section.blk.quote{margin:16px 0 20px}
+.quote i{display:block;width:26px;height:3px;border-radius:2px;background:var(--accent);margin-bottom:11px}
+.quote p{margin:0;font-family:"Barlow Condensed","IBM Plex Sans",sans-serif;font-weight:500;
+  font-size:21px;line-height:1.32;letter-spacing:.005em;color:var(--ink);text-wrap:balance;max-width:34ch}
+
+/* ---------- rest guidance ---------- */
+.restguide{border-top:1px solid var(--line-soft)}
+.rg{display:flex;gap:11px;padding:9px 12px;align-items:baseline}
+.rg + .rg{border-top:1px solid var(--line-soft)}
+.rg b{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:600;color:var(--ink);
+  width:38px;flex:none;font-variant-numeric:tabular-nums}
+.rg span{flex:1;font-size:12.5px;color:var(--muted);line-height:1.45}
+.rg em{font-style:normal;color:var(--accent);font-weight:600}
+.rg:first-child b{color:var(--accent)}
 
 /* ---------- calendar ---------- */
 .calhead{display:flex;align-items:center;gap:6px;margin-bottom:9px}
@@ -601,7 +618,41 @@ var SETRE = /(\d+)\s*[x×]\s*(\d+)/;
    cost nothing. This reproduces the workbook's own weekly totals on 67 of its
    72 scheduled days; the handful that differ are inconsistencies in the sheet
    itself, and this errs toward counting rather than missing them. */
+/* Drills where a kilo box would be meaningless. */
+var NOLOAD_PAT = /pogo|snap.?down|bound|sprint|mobility|shooting|warm.?up|altitude landing|stretch|test|reach/i;
+
 var HI_PAT = /cmj|countermovement|approach jump|approach touch|broad jump|rim.?touch|box jump|depth jump|hurdle jump|dunk attempt|attempts|max touch|trap-bar jump/i;
+/* Accessories carry no prescribed load in the programme, so suggest a
+   sensible first weight from your tested maxes. These are starting points,
+   not targets: the last rep of the last set should still be clean with two
+   or three left in you. Once you log a weight it becomes the suggestion. */
+var SUGGEST = [
+  [/rdl|romanian/i,            { of: "tb", f: 0.50 }],
+  [/hip thrust/i,              { of: "sq", f: 0.70 }],
+  [/bulgarian|split squat/i,   { of: "sq", f: 0.25, note: "total, so half that in each hand" }],
+  [/seated calf/i,             { of: "sq", f: 0.35 }],
+  [/standing calf/i,           { of: "sq", f: 0.50 }],
+  [/tibialis/i,                { flat: 5 }],
+  [/trap-bar jump|jump squat/i,{ of: "bw", f: 0.25, note: "20-30% of bodyweight" }],
+  [/nordic|ab wheel|pallof|sit-?up|leg raise|back extension|pull-?up|scapular/i, { body: true }]
+];
+function nameKey(s) {
+  return String(s).toLowerCase().replace(/\(.*?\)/g, "").replace(/[0-9]+\s*[x×]\s*[0-9]+.*$/, "")
+    .replace(/[^a-z ]/g, "").trim().replace(/\s+/g, "-");
+}
+function suggestLoad(text, week) {
+  for (var i = 0; i < SUGGEST.length; i++) {
+    if (SUGGEST[i][0].test(text)) {
+      var r = SUGGEST[i][1];
+      if (r.body) return { body: true };
+      if (r.flat) return { kg: r.flat };
+      var base = r.of === "bw" ? +S.settings.bw : oneRM(r.of, week);
+      return base ? { kg: r25(base * r.f), note: r.note } : null;
+    }
+  }
+  return null;
+}
+
 var LI_PAT = /jump squat|pogo|snap.?down|bound|altitude landing|sprint/i;
 
 /* Contacts earned by ONE set of this line. */
@@ -691,6 +742,8 @@ function buildSessions(week, st) {
         p.text = line.replace(/\s*\(Strength tab\)/i, "").replace(SETRE, tag.scheme || "$&");
       }
       p.kind = "ex"; p.key = id + ":" + i; p.hiPer = per;
+      p.loggable = p.hasSets && !per && !NOLOAD_PAT.test(line);
+      if (p.loggable) p.sugg = suggestLoad(line, week);
       return p;
     });
   }
@@ -704,6 +757,7 @@ function buildSessions(week, st) {
         return {
           kind: "ex", key: id + ":" + i, text: e.name, sets: n, hasSets: true,
           reps: e.reps, count: !!e.count,
+          loggable: !e.count, sugg: suggestLoad(e.name, week),
           detail: n + " x " + (e.count ? "max" : e.reps) + (e.note ? "  ·  " + e.note : "")
         };
       })
@@ -845,6 +899,64 @@ function paintTimer() {
     '<button class="x" data-act="tstop" aria-label="Stop timer">&times;</button></div>';
 }
 
+/* One line a day, in the programme's own register. Keyed to the date so it
+   holds all day and changes when the day does. */
+var QUOTES = [
+  "Tendons keep their own calendar. Yours is twenty-four weeks; theirs is longer.",
+  "The jump you skip today is the one you still have on Saturday.",
+  "Height comes off the floor fast, not off the floor hard.",
+  "Two clean attempts beat ten tired ones.",
+  "Nobody ever dunked by grinding a squat.",
+  "The warm-up is the session. The session is the bonus.",
+  "Speed into the plant. Everything else is detail.",
+  "You cannot rush a tendon and you cannot fool one.",
+  "Stop while the jumps are still good. That is the whole skill.",
+  "Bar speed is the honest number. The plate is just a plate.",
+  "The penultimate step is long. Almost every stall lives there.",
+  "Volume feels like progress. It usually is not.",
+  "Sleep is the training you get paid for.",
+  "Fresh and few beats tired and many.",
+  "Power to weight. Every kilo has to earn its ride.",
+  "The deload is not time off. It is when the work lands.",
+  "Arms up hard. They are worth more than you think.",
+  "Consistency is unglamorous and undefeated.",
+  "The best athletes are the ones still healthy in week twenty.",
+  "You are training the takeoff, not the effort.",
+  "Sharp pain is information, not weakness.",
+  "Miss a session, skip it. Never stack it.",
+  "Three minutes of rest is not laziness. It is the dose.",
+  "Every rep fast, or it is not this kind of training.",
+  "The rim does not move. Everything else is up to you.",
+  "Small ball first. The regulation one is a later problem.",
+  "Progress here is measured in centimetres and months.",
+  "A quiet landing is a strong landing.",
+  "Do not test what you have not trained.",
+  "Strength is the lever. Speed is the hand on it.",
+  "Chase the takeoff, not the soreness.",
+  "The set that impresses nobody is usually the right one.",
+  "Land like you plan to jump again tomorrow.",
+  "Twenty-four weeks is short. Show up for all of them.",
+  "Your ceiling this block is not your ceiling.",
+  "Depth jumps are a scalpel. Do not swing them.",
+  "Film it. You will not feel what you look like.",
+  "Nothing should feel maximal until it is meant to.",
+  "The plan is a plan. Your legs get a vote.",
+  "One good attempt is worth the whole session.",
+  "Recover on purpose, or recover by injury.",
+  "Rim touch first. The grab comes on its own.",
+  "Do less than you can, more often than you want.",
+  "The hardest discipline is stopping early.",
+  "Fast feet, long last step, arms to the sky.",
+  "Tendon before tissue. Always in that order.",
+  "You do not need a better programme. You need week nine.",
+  "Quality is the only volume that counts."
+];
+function quoteFor(week, dk) {
+  var d = dateOf(week, dk);
+  var n = d ? Math.floor(d.getTime() / 86400000) : (week * 7 + DAYS.indexOf(dk));
+  return QUOTES[((n % QUOTES.length) + QUOTES.length) % QUOTES.length];
+}
+
 /* ---------------- render: Today ---------------- */
 
 function ring(done, total) {
@@ -897,10 +1009,19 @@ function itemHTML(week, dk, it) {
         (it.reps ? esc(it.reps) : i + 1) + "</button>";
     }
     h += "</div>";
-    if (it.kg) {
-      h += '<div class="loadin"><span>actual</span>' +
-        '<input type="number" inputmode="decimal" step="2.5" data-act="ld" data-k="' + it.key + '" data-f="w" value="' + (ld.w != null ? ld.w : "") + '" placeholder="' + fmtKg(it.kg) + '" aria-label="Actual load in kg"><span>kg</span>' +
-        '<input type="number" inputmode="numeric" data-act="ld" data-k="' + it.key + '" data-f="r" value="' + (ld.r != null ? ld.r : "") + '" placeholder="' + (it.reps || "") + '" aria-label="Actual top-set reps"><span>reps top set</span></div>';
+    if (it.kg || it.loggable) {
+      var last = S.settings.lastLoad && S.settings.lastLoad[nameKey(it.text)];
+      var ph = it.kg ? fmtKg(it.kg) : (last != null ? fmtKg(last) : (it.sugg && it.sugg.kg ? fmtKg(it.sugg.kg) : ""));
+      var hint = it.kg ? "prescribed"
+        : ld.w != null ? "logged"
+          : last != null ? "last time"
+            : it.sugg && it.sugg.body ? "bodyweight"
+              : it.sugg && it.sugg.kg ? "suggested start" + (it.sugg.note ? " · " + it.sugg.note : "")
+                : "";
+      h += '<div class="loadin"><input type="number" inputmode="decimal" step="2.5" data-act="ld" data-k="' +
+        it.key + '" data-f="w" data-n="' + esc(nameKey(it.text)) + '" value="' + (ld.w != null ? ld.w : "") +
+        '" placeholder="' + ph + '" aria-label="Weight used, kg"><span>kg</span>' +
+        (hint ? '<em>' + esc(hint) + "</em>" : "") + "</div>";
     }
   }
   return h + "</div>";
@@ -949,7 +1070,7 @@ function viewToday() {
     h += '<div class="alert acc"><b>Dunk window.</b> Full 20 min warm-up, 3 minutes between attempts. Stop when two attempts in a row are clearly below your best of the day.</div>';
   }
 
-  h += '<section class="blk"><span class="eyebrow">' + esc(DAYFULL[dk]) + " · " + esc(W.focus.split(".")[0]) + "</span></section>";
+  h += '<section class="blk quote"><i></i><p>' + esc(quoteFor(week, dk)) + "</p></section>";
 
   ss.forEach(function (s) {
     h += '<div class="sess panel"><div class="sess-head"><span class="nm">' + esc(s.title) + "</span>" +
@@ -965,16 +1086,19 @@ function viewToday() {
     '<button class="btn" data-act="timer" data-s="60">1:00</button>' +
     '<button class="btn" data-act="timer" data-s="120">2:00</button>' +
     '<button class="btn" data-act="timer" data-s="180">3:00</button>' +
-    "</div></div></div>" +
-    '<div class="sub">3:00 between max approach jumps and dunk attempts. It feels absurd and it is the difference between training your peak and training your fatigue.</div></section>';
+    "</div></div>" +
+    '<div class="restguide">' +
+    '<div class="rg"><b>3:00</b><span><em>Non-negotiable.</em> Max approach jumps, rim touches, dunk attempts, depth jumps, and any heavy triple on the squat or trap-bar. These are nervous-system efforts — short rest trains your fatigue instead of your peak.</span></div>' +
+    '<div class="rg"><b>2:00</b><span>Back squat and trap-bar work sets of four or five.</span></div>' +
+    '<div class="rg"><b>1:00</b><span>Accessories, upper body, calves and core.</span></div>' +
+    "</div></div></section>";
 
   h += '<section class="blk"><span class="eyebrow">Session notes</span>' +
     '<textarea class="txtin" data-act="note" placeholder="How the jumps felt, bar speed, anything that hurt.">' + esc(D.note || "") + "</textarea></section>";
 
   var pr = dayProgress(week, dk);
   h += '<section class="blk"><button class="btn ' + (D.done ? "done" : "pri") + '" data-act="finish">' +
-    (D.done ? "Session complete ✓" : "Finish session · " + pr.done + "/" + pr.total) + "</button>" +
-    '<div class="sub">' + esc(W.focus) + "</div></section>";
+    (D.done ? "Session complete ✓" : "Finish session · " + pr.done + "/" + pr.total) + "</button></section>";
 
   return h;
 }
@@ -1289,6 +1413,26 @@ function viewGuide() {
       " Deload weeks and weeks 17-24 drop every exercise to 2 sets.</div></section>";
   });
 
+  h += '<section class="blk"><span class="eyebrow">Picking a weight</span><div class="panel">' +
+    '<details class="acc" open><summary>The rule that governs everything</summary><div class="body">' +
+    "<p>Only the back squat, trap-bar deadlift and front squat carry a prescribed number, because only those are tied to a tested max. Everything else you choose, and the test is the same every time:</p>" +
+    "<p><b>The last rep of the last set should be clean, with two or three more left in you.</b> If the bar slows, the weight is too heavy — that is true even when the number on the plan says otherwise.</p>" +
+    "<p>Accessories exist to support Tuesday and Thursday. A hard set of split squats that costs you jump height on Tuesday is a loss, not a win. Never grind them.</p>" +
+    "</div></details>" +
+    '<details class="acc"><summary>Where to start</summary><div class="body">' +
+    "<p>Each box shows a suggested starting weight worked out from your tested squat and trap-bar maxes. Use it for the first session, then trust the rep test above over the suggestion.</p>" +
+    "<p>Once you log a weight it becomes the placeholder next week, so you always see what you last did.</p>" +
+    "</div></details>" +
+    '<details class="acc"><summary>When to add weight</summary><div class="body">' +
+    "<p>When every set hits the top of its rep range and the last rep is still clean, add <b>2.5 kg</b> to a barbell lift or <b>2 kg per dumbbell</b>, and start again at the bottom of the range.</p>" +
+    "<p>Add reps before load on bodyweight work: pull-ups, Nordics, ab wheel, back extensions.</p>" +
+    "<p>Calf and tibialis work responds to slow tempo more than heavy load. Hold the pause; do not chase the number.</p>" +
+    "</div></details>" +
+    '<details class="acc"><summary>Two lifts worth naming</summary><div class="body">' +
+    "<p><b>Nordic curl</b> — never add weight. Make it harder by lowering more slowly or using less help from your hands.</p>" +
+    "<p><b>Trap-bar jump and jump squat</b> — 20 to 30% of bodyweight, no more. If the bar is heavy enough that you barely leave the floor, it has stopped being a jump.</p>" +
+    "</div></details></div></section>";
+
   h += '<section class="blk"><span class="eyebrow">Rules &amp; recovery</span><div class="panel">';
   P.rules.forEach(function (r) {
     h += '<details class="acc"><summary>' + esc(r.title) + '</summary><div class="body"><p>' + esc(r.text) + "</p></div></details>";
@@ -1461,7 +1605,13 @@ document.addEventListener("change", function (ev) {
     var D = day(S.ui.w, S.ui.d);
     D.ld[t.dataset.k] = D.ld[t.dataset.k] || {};
     D.ld[t.dataset.k][t.dataset.f] = val;
-    touchWeek(S.ui.w);
+    if (t.dataset.n && val != null) {
+      S.settings.lastLoad = S.settings.lastLoad || {};
+      S.settings.lastLoad[t.dataset.n] = val;
+      S.settings.updatedAt = Date.now();
+      pushSettings();
+    }
+    touchWeek(S.ui.w); render();
   } else if (act === "reps") {
     var Dp = day(S.ui.w, S.ui.d), rk = t.dataset.k;
     Dp.reps = Dp.reps || {};
