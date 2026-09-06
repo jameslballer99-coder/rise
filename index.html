@@ -284,6 +284,13 @@ details.acc .body p:last-child{margin-bottom:0}
   font-variant-numeric:tabular-nums}
 .hirow b i{font-style:normal;color:var(--faint);font-weight:400}
 
+.sess-head .dur{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--faint);
+  flex:none;font-variant-numeric:tabular-nums}
+.daytime{display:flex;align-items:baseline;gap:9px;margin:-6px 0 16px}
+.daytime b{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:17px;color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.daytime span{font-size:12.5px;color:var(--faint)}
+
 /* ---------- daily line ---------- */
 section.blk.quote{margin:16px 0 20px}
 .quote i{display:block;width:26px;height:3px;border-radius:2px;background:var(--accent);margin-bottom:11px}
@@ -619,6 +626,17 @@ var SETRE = /(\d+)\s*[x×]\s*(\d+)/;
    72 scheduled days; the handful that differ are inconsistencies in the sheet
    itself, and this errs toward counting rather than missing them. */
 /* Drills where a kilo box would be meaningless. */
+/* Substitutions. The sets and reps stay as written; only the lift changes,
+   and each swap keeps the job the original was doing. */
+var SUBS = [
+  [/front squat/i, "Leg press (or goblet squat)"],
+  [/nordic curl/i, "Lying hamstring curl (or ball curl)"]
+];
+function applySubs(line) {
+  for (var i = 0; i < SUBS.length; i++) line = line.replace(SUBS[i][0], SUBS[i][1]);
+  return line;
+}
+
 var NOLOAD_PAT = /pogo|snap.?down|bound|sprint|mobility|shooting|warm.?up|altitude landing|stretch|test|reach/i;
 
 var HI_PAT = /cmj|countermovement|approach jump|approach touch|broad jump|rim.?touch|box jump|depth jump|hurdle jump|dunk attempt|attempts|max touch|trap-bar jump/i;
@@ -667,6 +685,29 @@ function hiPerSet(line) {
 /* Upper body — two sessions, Push on Monday and Pull on Wednesday.
    Four sets on everything, every week: upper work does not load the Achilles,
    so it is not what the deload weeks exist to protect. */
+/* Wednesday core and mobility. Bodyweight throughout, so no weight boxes.
+   The two ankle and hip drills are the ones that matter for jumping: shallow
+   dorsiflexion shortens your plant, and tight hip flexors cost you extension. */
+var CORE = {
+  title: "Core", meta: "zero lower impact",
+  ex: [
+    { name: "Plank", sets: 3, reps: "45 s" },
+    { name: "Side plank", sets: 3, reps: "30 s / side" },
+    { name: "Dead bug", sets: 3, reps: "10 / side" },
+    { name: "Russian twist", sets: 3, reps: "20" }
+  ]
+};
+var MOBILITY = {
+  title: "Mobility", meta: "~10 min",
+  ex: [
+    { name: "Knee-to-wall ankle stretch", sets: 2, reps: "30 s / side", why: "deeper plant" },
+    { name: "Kneeling hip flexor stretch", sets: 2, reps: "30 s / side", why: "full extension at takeoff" },
+    { name: "Seated 90/90 hip rotation", sets: 2, reps: "5 / side" },
+    { name: "Hamstring stretch", sets: 2, reps: "30 s / side" },
+    { name: "Calf stretch, straight and bent knee", sets: 2, reps: "30 s / side" }
+  ]
+};
+
 var UPPER = {
   A: {
     title: "Push", meta: "~30 min",
@@ -732,6 +773,7 @@ function buildSessions(week, st) {
   }
   function items(lines, id) {
     return lines.map(function (line, i) {
+      line = applySubs(line);
       var per = hiPerSet(line);
       var kind = per > 0 ? "ex" : classify(line);   // anything that scores is trackable
       if (kind !== "ex") return { kind: kind, text: line };
@@ -746,6 +788,19 @@ function buildSessions(week, st) {
       if (p.loggable) p.sugg = suggestLoad(line, week);
       return p;
     });
+  }
+  function fixedBlock(lib, id, cap) {
+    return {
+      id: id, title: lib.title, meta: lib.meta, hi: 0,
+      items: lib.ex.map(function (e, i) {
+        var n = Math.min(e.sets, cap);
+        return {
+          kind: "ex", key: id + ":" + i, text: e.name, sets: n, hasSets: true,
+          reps: e.reps, loggable: false,
+          detail: n + " x " + e.reps + (e.why ? "  ·  " + e.why : "")
+        };
+      })
+    };
   }
   function upper(letter, id) {
     var lib = UPPER[letter]; if (!lib) return null;
@@ -772,9 +827,9 @@ function buildSessions(week, st) {
 
   out.tue.push({ id: "tue", title: "Jump + court", meta: "primary jump day", hi: W.tue_hi || 0, items: items(W.tue_jump, "tue") });
 
-  var wedRest = W.wed.filter(function (l) { return !/Upper B/i.test(l); });
   if (W.wed.some(function (l) { return /Upper B/i.test(l); })) out.wed.push(upper("B", "wed-upperB"));
-  if (wedRest.length) out.wed.push({ id: "wed", title: "Core + mobility", meta: "zero lower impact", hi: 0, items: items(wedRest, "wed") });
+  out.wed.push(fixedBlock(CORE, "wed-core", deload ? 2 : 99));
+  out.wed.push(fixedBlock(MOBILITY, "wed-mob", 99));
 
   out.thu.push({ id: "thu", title: "Explosive", meta: "nervous-system day", hi: W.thu_hi || 0, items: items(W.thu, "thu") });
   out.fri.push({ id: "fri", title: "Rest", meta: "protected", hi: 0, items: items(W.fri, "fri") });
@@ -857,6 +912,41 @@ function dayProgress(week, dk) {
   return { done: done, total: tot };
 }
 
+/* ---------------- session length ---------------- */
+
+/* Minutes per set, rest included — the rest is most of it. Max-effort jumps
+   carry three minutes each, which is why the jump days run long. */
+function setCost(it) {
+  var x = it.text;
+  if (it.hiPer) return /approach|rim.?touch|dunk|depth|max touch/i.test(x) ? 3.3 : 2.3;
+  if (LI_PAT.test(x)) return 1.3;
+  if (/back squat|trap-bar deadlift/i.test(x)) return 3.0;
+  if (/plank|dead bug|twist|stretch|rotation|90\/90/i.test(x)) return 1.1;
+  return 1.7;
+}
+function sessionMinutes(s) {
+  var t = 0;
+  s.items.forEach(function (it) {
+    if (it.kind !== "ex") return;          // notes are instructions, not work
+    if (it.hasSets) {
+      t += it.sets * setCost(it);
+      if (/back squat|trap-bar deadlift/i.test(it.text)) t += 6;   // ramp-up sets
+    } else {
+      var m = it.text.match(/([0-9]+)\s*min/);
+      t += m ? +m[1] : 2;
+    }
+  });
+  return Math.max(5, Math.round(t / 5) * 5);
+}
+function dayMinutes(week, dk) {
+  return sessionsFor(week)[dk].reduce(function (a, s) { return a + sessionMinutes(s); }, 0);
+}
+function fmtMins(m) {
+  if (m < 60) return m + " min";
+  var h = Math.floor(m / 60), r = m % 60;
+  return h + " h" + (r ? " " + r : "");
+}
+
 /* ---------------- tiny DOM helpers ---------------- */
 
 function esc(s) {
@@ -899,57 +989,82 @@ function paintTimer() {
     '<button class="x" data-act="tstop" aria-label="Stop timer">&times;</button></div>';
 }
 
-/* One line a day, in the programme's own register. Keyed to the date so it
-   holds all day and changes when the day does. */
+/* One line a day. Three registers — straight motivation, funny, quirky —
+   interleaved so you never get the same tone two days running. Keyed to the
+   date, so it holds all day and turns over at midnight. */
 var QUOTES = [
-  "Tendons keep their own calendar. Yours is twenty-four weeks; theirs is longer.",
-  "The jump you skip today is the one you still have on Saturday.",
-  "Height comes off the floor fast, not off the floor hard.",
-  "Two clean attempts beat ten tired ones.",
-  "Nobody ever dunked by grinding a squat.",
-  "The warm-up is the session. The session is the bonus.",
-  "Speed into the plant. Everything else is detail.",
-  "You cannot rush a tendon and you cannot fool one.",
-  "Stop while the jumps are still good. That is the whole skill.",
-  "Bar speed is the honest number. The plate is just a plate.",
-  "The penultimate step is long. Almost every stall lives there.",
-  "Volume feels like progress. It usually is not.",
-  "Sleep is the training you get paid for.",
-  "Fresh and few beats tired and many.",
-  "Power to weight. Every kilo has to earn its ride.",
-  "The deload is not time off. It is when the work lands.",
-  "Arms up hard. They are worth more than you think.",
-  "Consistency is unglamorous and undefeated.",
-  "The best athletes are the ones still healthy in week twenty.",
-  "You are training the takeoff, not the effort.",
-  "Sharp pain is information, not weakness.",
-  "Miss a session, skip it. Never stack it.",
-  "Three minutes of rest is not laziness. It is the dose.",
-  "Every rep fast, or it is not this kind of training.",
-  "The rim does not move. Everything else is up to you.",
-  "Small ball first. The regulation one is a later problem.",
-  "Progress here is measured in centimetres and months.",
-  "A quiet landing is a strong landing.",
-  "Do not test what you have not trained.",
-  "Strength is the lever. Speed is the hand on it.",
-  "Chase the takeoff, not the soreness.",
-  "The set that impresses nobody is usually the right one.",
-  "Land like you plan to jump again tomorrow.",
-  "Twenty-four weeks is short. Show up for all of them.",
-  "Your ceiling this block is not your ceiling.",
-  "Depth jumps are a scalpel. Do not swing them.",
-  "Film it. You will not feel what you look like.",
-  "Nothing should feel maximal until it is meant to.",
-  "The plan is a plan. Your legs get a vote.",
-  "One good attempt is worth the whole session.",
-  "Recover on purpose, or recover by injury.",
-  "Rim touch first. The grab comes on its own.",
-  "Do less than you can, more often than you want.",
-  "The hardest discipline is stopping early.",
-  "Fast feet, long last step, arms to the sky.",
-  "Tendon before tissue. Always in that order.",
   "You do not need a better programme. You need week nine.",
-  "Quality is the only volume that counts."
+  "The rim has never once moved. Deeply annoying.",
+  "Expect nothing. Jump anyway.",
+  "Tendons keep their own calendar. Yours is short; theirs is not.",
+  "Quick feet. Tall spine. Loud arms.",
+  "Gravity remains undefeated. You are here to negotiate.",
+  "Stop while the jumps are still good. That is the whole skill.",
+  "Your calves are a personality now. Accept it.",
+  "This time, this year.",
+  "The best athletes are the ones still healthy in week twenty.",
+  "Be a spring, not a hammer.",
+  "Nobody has ever regretted the third minute of rest. Nobody.",
+  "Consistency is unglamorous and undefeated.",
+  "You are not tired. You are five centimetres from insufferable.",
+  "Short ground, long air.",
+  "Progress here is measured in centimetres and months.",
+  "Fall into the floor and let it hand you back.",
+  "The squat rack is not a coat hook. Today it is yours.",
+  "Twenty-four weeks is short. Show up for all of them.",
+  "Yes, the pogo drills look ridiculous. Do them anyway.",
+  "The floor is a trampoline you have to convince.",
+  "Your ceiling this block is not your ceiling.",
+  "Jump like the rim owes you money.",
+  "Ego lifts are how you meet a physiotherapist.",
+  "Two clean attempts beat ten tired ones.",
+  "Nobody claps at the gym. Jump anyway.",
+  "Steal the last step. Give back the height.",
+  "Speed into the plant. Everything else is detail.",
+  "Count contacts, not feelings.",
+  "You will graze the rim and celebrate like it went in.",
+  "Strength is the lever. Speed is the hand on it.",
+  "The tibialis raise: least glamorous, quietly essential.",
+  "Land quiet. Leave loud.",
+  "Fresh and few beats tired and many.",
+  "You are a pogo stick with opinions.",
+  "Your ankles have filed a complaint. Do the mobility.",
+  "The rim does not move. Everything else is up to you.",
+  "Three minutes of rest feels like a prank. It is not.",
+  "Ask the floor politely. Then insist.",
+  "One good attempt is worth the whole session.",
+  "Two feet, one intention.",
+  "Half of this programme is standing still on purpose.",
+  "Land like you plan to jump again tomorrow.",
+  "You are one deload away from feeling like an athlete.",
+  "Make the ground regret it.",
+  "The deload is not time off. It is when the work lands.",
+  "The penultimate step is the whole plot.",
+  "Missing the rim is just a very close touch.",
+  "Do less than you can, more often than you want.",
+  "Bulgarian split squats were named by someone who disliked you.",
+  "Be boring for eight weeks. Be dangerous after.",
+  "The hardest discipline is stopping early.",
+  "Today is a deposit, not a withdrawal.",
+  "Nobody is filming. That is the only thing saving you.",
+  "Quality is the only volume that counts.",
+  "The plan says four sets. The plan is not negotiating.",
+  "Train the takeoff. Let the landing train you.",
+  "Recover on purpose, or recover by injury.",
+  "Get low, then leave.",
+  "Everything hurts and the rim is still up there. Rude.",
+  "Sleep is the training you get paid for.",
+  "Warm up like someone who intends to walk tomorrow.",
+  "Rhythm beats effort. Every time.",
+  "Bar speed is the honest number. The plate is just a plate.",
+  "Cheat the horizontal into vertical.",
+  "Somewhere a rim is talking about you. Not kindly.",
+  "Fast feet, long last step, arms to the sky.",
+  "Your knees have notes. Read them before Thursday.",
+  "Stiff ankles, soft knees, big arms.",
+  "Nobody ever dunked by grinding a squat.",
+  "The best jumpers look unhurried.",
+  "Leg day is every day when the goal is airborne."
 ];
 function quoteFor(week, dk) {
   var d = dateOf(week, dk);
@@ -1071,10 +1186,17 @@ function viewToday() {
   }
 
   h += '<section class="blk quote"><i></i><p>' + esc(quoteFor(week, dk)) + "</p></section>";
+  var dm = dayMinutes(week, dk);
+  if (dm > 5) {
+    h += '<div class="daytime"><b>' + fmtMins(dm) + "</b><span>" +
+      (ss.length > 1 ? ss.length + " sessions · you can split them across the day" : "one session") +
+      "</span></div>";
+  }
 
   ss.forEach(function (s) {
     h += '<div class="sess panel"><div class="sess-head"><span class="nm">' + esc(s.title) + "</span>" +
-      (s.meta ? '<span class="meta">' + esc(s.meta) + "</span>" : "") + "</div>";
+      (s.meta ? '<span class="meta">' + esc(s.meta) + "</span>" : "") +
+      '<span class="dur">' + fmtMins(sessionMinutes(s)) + "</span></div>";
     s.items.forEach(function (it) { h += itemHTML(week, dk, it); });
     h += "</div>";
   });
@@ -1203,7 +1325,7 @@ function viewCal() {
       ring(pr.done, pr.total) +
       '<span class="dn">' + DAYNM[dk] + "</span>" +
       '<span class="dt">' + esc(titles) + "<s>" + (d ? isoDate(d) + " · " : "") +
-      (hip ? hact + "/" + hip + " hard jumps" : "no jumps") + "</s></span>" +
+      fmtMins(dayMinutes(week, dk)) + (hip ? " · " + hact + "/" + hip + " jumps" : "") + "</s></span>" +
       "</button>";
   });
   h += "</div></section>";
@@ -1211,7 +1333,6 @@ function viewCal() {
   h += '<section class="blk"><span class="eyebrow">Loads this week</span><div class="panel kv">' +
     "<div>Back squat</div><div>" + esc(st.row.squat_scheme) + " @ " + (st.sqKg ? fmtKg(st.sqKg) + " kg" : "—") + "</div>" +
     "<div>Trap-bar deadlift</div><div>" + esc(st.row.tb_scheme) + " @ " + (st.tbKg ? fmtKg(st.tbKg) + " kg" : "—") + "</div>" +
-    "<div>Front squat</div><div>3x6 @ " + (st.fsKg ? fmtKg(st.fsKg) + " kg" : "—") + "</div>" +
     "<div>Squat intensity</div><div>" + Math.round(st.row.squat_pct * 100) + "% of " + (st.sq1 ? fmtKg(st.sq1) + " kg" : "—") + "</div>" +
     "</div><div class=\"sub\">" + esc(st.row.notes) + "</div></section>";
 
@@ -1431,6 +1552,38 @@ function viewGuide() {
     '<details class="acc"><summary>Two lifts worth naming</summary><div class="body">' +
     "<p><b>Nordic curl</b> — never add weight. Make it harder by lowering more slowly or using less help from your hands.</p>" +
     "<p><b>Trap-bar jump and jump squat</b> — 20 to 30% of bodyweight, no more. If the bar is heavy enough that you barely leave the floor, it has stopped being a jump.</p>" +
+    "</div></details></div></section>";
+
+  h += '<section class="blk"><span class="eyebrow">Running short on time</span><div class="panel">' +
+    '<details class="acc" open><summary>What to cut, in order</summary><div class="body">' +
+    "<p><b>1. Superset the accessories.</b> Pair things that do not compete: calves with tibialis, lateral raise with sit-ups, chest row with back extension. Saves 10 to 15 minutes and costs nothing.</p>" +
+    "<p><b>2. Move the shooting block.</b> The 20 minutes of shooting on Tuesday is skill work, not training load. Do it another time and Tuesday drops by a third.</p>" +
+    "<p><b>3. Split the day.</b> Monday is a lower session and a push session. They are allowed to be hours apart — the plan only asks for 20 minutes between them.</p>" +
+    "<p><b>4. Cut upper sets from 4 to 3.</b> Costs you the least of anything here.</p>" +
+    "<p><b>5. Halve the rim touches</b> on weeks with no dunk window. They overlap with the approach jumps.</p>" +
+    "</div></details>" +
+    '<details class="acc"><summary>What never to cut</summary><div class="body">' +
+    "<p><b>The three-minute rests.</b> Shortening them does not shorten the session, it changes what the session trains — fatigue instead of peak height. If the jump day is too long, do fewer jumps at full rest rather than the same number rushed.</p>" +
+    "<p><b>The warm-up.</b> Fifteen minutes, twenty in the last two phases. It does not shrink as the block goes on.</p>" +
+    "<p><b>Friday.</b> One blank day is what makes the other six work.</p>" +
+    "</div></details></div></section>";
+
+  h += '<section class="blk"><span class="eyebrow">Fitting games in</span><div class="panel">' +
+    '<details class="acc"><summary>You have a game on Saturday</summary><div class="body">' +
+    "<p><b>Let the game replace Saturday.</b> Saturday is strength with barely any jumping, and the programme's own rule is to skip a missed session rather than stack it somewhere else.</p>" +
+    "<p>If you want the lift anyway, move it to Sunday and cut Monday back to the squat alone that week — otherwise you are lifting legs three days in a row.</p>" +
+    "<p>Keep Friday as rest either way. It is what makes you fresh for the game.</p>" +
+    "</div></details>" +
+    '<details class="acc"><summary>You want to play on Sunday</summary><div class="body">' +
+    "<p>Fine — Sunday is free. Two conditions: keep it to about 75 minutes, and if it runs long or hard, drop Monday to technique work at 60%.</p>" +
+    "<p>Never play both Saturday and Sunday. That is four hard leg days in a row before Tuesday.</p>" +
+    "</div></details>" +
+    '<details class="acc"><summary>Games count as jumps</summary><div class="body">' +
+    "<p>A competitive game is roughly 15 to 25 hard jumps — rebounds, layups, contested shots. The app cannot see those, so add them to your own count when you check the weekly cap.</p>" +
+    "<p>On a week with a game, expect to be near the cap before Thursday. Cut Thursday first.</p>" +
+    "</div></details>" +
+    '<details class="acc"><summary>Dunk window weeks</summary><div class="body">' +
+    "<p>Weeks 12, 16, 20 and every Saturday of 21 to 24 are attempt windows, and they sit on Saturdays because you are freshest there. Do not give those Saturdays to a game. If you must, move the window to Sunday and keep Saturday easy.</p>" +
     "</div></details></div></section>";
 
   h += '<section class="blk"><span class="eyebrow">Rules &amp; recovery</span><div class="panel">';
