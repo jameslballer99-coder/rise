@@ -291,6 +291,14 @@ details.acc .body p:last-child{margin-bottom:0}
   font-variant-numeric:tabular-nums}
 .daytime span{font-size:12.5px;color:var(--faint)}
 
+/* ---------- lift picker ---------- */
+.liftpick{display:flex;gap:6px;overflow-x:auto;padding:0 0 9px;scrollbar-width:none}
+.liftpick::-webkit-scrollbar{display:none}
+.liftpick button{flex:none;padding:6px 11px;border:1px solid var(--line);border-radius:20px;
+  background:var(--surface);font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13.5px;
+  letter-spacing:.03em;color:var(--ink-2);white-space:nowrap}
+.liftpick button[aria-current="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+
 /* ---------- launch screen ---------- */
 #splash{position:fixed;inset:0;z-index:200;background:#15120E;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;
@@ -940,6 +948,82 @@ function dayProgress(week, dk) {
   return { done: done, total: tot };
 }
 
+/* ---------------- logged weights ---------------- */
+
+/* Strip the prescription off an exercise line so it reads as a lift name. */
+function liftLabel(s) {
+  return String(s).replace(/\(.*?\)/g, "")
+    .replace(/[0-9]+\s*[x×]\s*[0-9]+.*$/, "")
+    .replace(/\s+/g, " ").trim();
+}
+
+/* { nameKey: {label, points:[{w, kg}]} } across all 24 weeks, in week order. */
+function liftSeries() {
+  var map = {};
+  for (var n = 1; n <= 24; n++) {
+    var W = S.weeks[n];
+    if (!W || !W.d) continue;
+    var built = sessionsFor(n);
+    DAYS.forEach(function (dk) {
+      var rec = W.d[dk];
+      if (!rec || !rec.ld) return;
+      built[dk].forEach(function (s) {
+        s.items.forEach(function (it) {
+          var e = rec.ld[it.key];
+          if (!e || e.w == null || e.w === "") return;
+          var k = nameKey(it.text);
+          if (!map[k]) map[k] = { label: liftLabel(it.text), points: [] };
+          map[k].points.push({ w: n, kg: +e.w });
+        });
+      });
+    });
+  }
+  Object.keys(map).forEach(function (k) {
+    map[k].points.sort(function (a, b) { return a.w - b.w; });
+  });
+  return map;
+}
+
+function liftChartSVG(series) {
+  var W = 340, H = 150, L = 34, R = 10, TP = 12, B = 20;
+  var pts = series.points;
+  var lo = Math.min.apply(null, pts.map(function (p) { return p.kg; }));
+  var hi = Math.max.apply(null, pts.map(function (p) { return p.kg; }));
+  if (hi - lo < 5) { lo -= 2.5; hi += 2.5; }
+  var pad = (hi - lo) * 0.15;
+  lo -= pad; hi += pad;
+  function x(w) { return L + (w / 24) * (W - L - R); }
+  function y(v) { return TP + (1 - (v - lo) / (hi - lo)) * (H - TP - B); }
+
+  var s = '<svg viewBox="0 0 ' + W + " " + H + '" width="100%" role="img" aria-label="' +
+    esc(series.label) + ' weight by week">';
+  [lo + pad, (lo + hi) / 2, hi - pad].forEach(function (v) {
+    s += '<line x1="' + L + '" y1="' + y(v).toFixed(1) + '" x2="' + (W - R) + '" y2="' + y(v).toFixed(1) +
+      '" stroke="var(--line-soft)" stroke-width="1"></line>' +
+      '<text x="' + (L - 5) + '" y="' + (y(v) + 3.2).toFixed(1) + '" text-anchor="end" fill="var(--faint)" ' +
+      'font-family="IBM Plex Mono, monospace" font-size="9">' + fmtKg(Math.round(v * 2) / 2) + "</text>";
+  });
+  if (pts.length > 1) {
+    s += '<polyline points="' + pts.map(function (p) { return x(p.w).toFixed(1) + "," + y(p.kg).toFixed(1); }).join(" ") +
+      '" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"></polyline>';
+  }
+  pts.forEach(function (p, i) {
+    var last = i === pts.length - 1;
+    s += '<circle cx="' + x(p.w).toFixed(1) + '" cy="' + y(p.kg).toFixed(1) + '" r="' + (last ? 4.5 : 3) +
+      '" fill="var(--accent)"></circle>';
+    if (last) {
+      s += '<text x="' + (x(p.w) > W - 70 ? x(p.w) - 8 : x(p.w) + 8).toFixed(1) + '" y="' + (y(p.kg) - 7).toFixed(1) +
+        '" fill="var(--accent)" font-family="IBM Plex Mono, monospace" font-size="10.5" font-weight="600" ' +
+        'text-anchor="' + (x(p.w) > W - 70 ? "end" : "start") + '">' + fmtKg(p.kg) + " kg</text>";
+    }
+  });
+  [1, 8, 16, 24].forEach(function (w) {
+    s += '<text x="' + x(w).toFixed(1) + '" y="' + (H - 5) + '" text-anchor="middle" fill="var(--faint)" ' +
+      'font-family="IBM Plex Mono, monospace" font-size="9">wk ' + w + "</text>";
+  });
+  return s + "</svg>";
+}
+
 /* ---------------- session length ---------------- */
 
 /* Minutes per set, rest included — the rest is most of it. Max-effort jumps
@@ -1488,6 +1572,44 @@ function viewProg() {
 
   var sq = oneRM("sq", week), tb = oneRM("tb", week);
   var ratio = sq ? sq / +S.settings.bw : null;
+  /* --- weights you have logged --- */
+  var series = liftSeries();
+  var keys = Object.keys(series).sort(function (a, b) {
+    return series[b].points.length - series[a].points.length || series[a].label.localeCompare(series[b].label);
+  });
+  h += '<section class="blk"><span class="eyebrow">Your lifts</span>';
+  if (!keys.length) {
+    h += '<div class="panel"><div class="hi"><div class="note">No weights logged yet. Type what you lifted into the kg box under any exercise and it will chart here, week by week.</div></div></div></section>';
+  } else {
+    if (keys.indexOf(S.ui.lift) < 0) S.ui.lift = keys[0];
+    h += '<div class="liftpick">';
+    keys.forEach(function (k) {
+      h += '<button data-act="lift" data-k="' + esc(k) + '" aria-current="' + (k === S.ui.lift ? "true" : "false") + '">' +
+        esc(series[k].label) + "</button>";
+    });
+    h += "</div>";
+    var sel = series[S.ui.lift], p = sel.points;
+    var first = p[0], last = p[p.length - 1], delta = last.kg - first.kg;
+    h += '<div class="panel"><div class="stat3">' +
+      '<div><div class="v">' + fmtKg(last.kg) + '</div><div class="k">latest</div></div>' +
+      '<div><div class="v" style="color:' + (delta > 0 ? "var(--ok)" : delta < 0 ? "var(--crit)" : "var(--ink)") + '">' +
+        (delta > 0 ? "+" : "") + fmtKg(delta) + '</div><div class="k">since wk ' + first.w + "</div></div>" +
+      '<div><div class="v">' + p.length + '</div><div class="k">' + (p.length === 1 ? "entry" : "entries") + "</div></div>" +
+      "</div>";
+    h += p.length > 1
+      ? '<div style="padding:8px 8px 4px">' + liftChartSVG(sel) + "</div>"
+      : '<div class="hi"><div class="note">One entry so far. Log it again next week and the line starts.</div></div>';
+    h += "</div>";
+    h += '<div class="panel" style="margin-top:12px"><div class="kv">';
+    keys.forEach(function (k) {
+      var q = series[k].points, d = q[q.length - 1].kg - q[0].kg;
+      h += "<div>" + esc(series[k].label) + "</div><div>" + fmtKg(q[q.length - 1].kg) + " kg" +
+        (q.length > 1 ? '<span style="color:' + (d > 0 ? "var(--ok)" : d < 0 ? "var(--crit)" : "var(--faint)") +
+          '"> · ' + (d > 0 ? "+" : "") + fmtKg(d) + "</span>" : "") + "</div>";
+    });
+    h += "</div></div></section>";
+  }
+
   h += '<section class="blk"><span class="eyebrow">Strength</span><div class="panel kv">' +
     "<div>Est. squat 1RM</div><div>" + (sq ? fmtKg(sq) + " kg" : "—") + "</div>" +
     "<div>Est. trap-bar 1RM</div><div>" + (tb ? fmtKg(tb) + " kg" : "—") + "</div>" +
@@ -1745,6 +1867,7 @@ document.addEventListener("click", function (ev) {
       break;
     }
     case "pickw": S.ui.pickW = +b.dataset.w; saveLocal(); render(); break;
+    case "lift": S.ui.lift = b.dataset.k; saveLocal(); render(); break;
     case "mon": {
       var base = S.ui.month ? new Date(+S.ui.month.split("-")[0], +S.ui.month.split("-")[1] - 1, 1)
                             : new Date(new Date().getFullYear(), new Date().getMonth(), 1);

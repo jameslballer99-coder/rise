@@ -1,5 +1,5 @@
 /* Rise service worker — cache-first, so the app opens with no signal. */
-var CACHE = "rise-5daffef900";
+var CACHE = "rise-744cf1ab37";
 var CORE = ["./", "./index.html", "./manifest.webmanifest",
             "./icon-180.png", "./icon-192.png", "./icon-512.png", "./icon-maskable.png"];
 
