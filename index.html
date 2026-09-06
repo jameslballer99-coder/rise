@@ -26,7 +26,7 @@
 <title>Rise</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
 <style>
 :root{
   --ground:#EDE9E2; --surface:#FBFAF8; --raise:#FFFFFF;
@@ -291,11 +291,24 @@ details.acc .body p:last-child{margin-bottom:0}
   font-variant-numeric:tabular-nums}
 .daytime span{font-size:12.5px;color:var(--faint)}
 
+/* ---------- launch screen ---------- */
+#splash{position:fixed;inset:0;z-index:200;background:#15120E;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;
+  opacity:1;transition:opacity .38s ease}
+#splash[data-off="1"]{opacity:0;pointer-events:none}
+#splash svg{width:min(38vw,170px);height:auto;display:block}
+#splash .word{font-family:"Anton","Barlow Condensed",sans-serif;font-weight:400;
+  font-size:min(17vw,74px);line-height:1;letter-spacing:.13em;text-indent:.13em;
+  color:#EFE9E0;text-transform:uppercase}
+@media (prefers-reduced-motion:reduce){#splash{transition:none}}
+
 /* ---------- daily line ---------- */
 section.blk.quote{margin:16px 0 20px}
 .quote i{display:block;width:26px;height:3px;border-radius:2px;background:var(--accent);margin-bottom:11px}
 .quote p{margin:0;font-family:"Barlow Condensed","IBM Plex Sans",sans-serif;font-weight:500;
-  font-size:21px;line-height:1.32;letter-spacing:.005em;color:var(--ink);text-wrap:balance;max-width:34ch}
+  font-size:19px;line-height:1.35;letter-spacing:.005em;color:var(--ink);text-wrap:pretty;max-width:44ch}
+.quote cite{display:block;margin-top:7px;font-style:normal;font-family:"Barlow Condensed",sans-serif;
+  font-weight:600;font-size:12.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--faint)}
 
 /* ---------- rest guidance ---------- */
 .restguide{border-top:1px solid var(--line-soft)}
@@ -354,6 +367,21 @@ section.blk.quote{margin:16px 0 20px}
   text-align:center;font-family:"IBM Plex Mono",monospace;font-size:15px;padding:0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
+
+<div id="splash" role="presentation">
+  <svg viewBox="0 0 100 100" aria-hidden="true">
+    <defs><clipPath id="ballclip"><circle cx="50" cy="33.5" r="21.5"/></clipPath></defs>
+    <circle cx="50" cy="33.5" r="21.5" fill="#EFE9E0"/>
+    <g clip-path="url(#ballclip)" stroke="#15120E" stroke-width="2.6" fill="none">
+      <line x1="28.5" y1="33.5" x2="71.5" y2="33.5"/>
+      <line x1="50" y1="12" x2="50" y2="55"/>
+      <ellipse cx="36.7" cy="33.5" rx="14" ry="22.6"/>
+      <ellipse cx="63.3" cy="33.5" rx="14" ry="22.6"/>
+    </g>
+    <ellipse cx="50" cy="73.5" rx="36" ry="10.5" fill="none" stroke="#FF6A33" stroke-width="7.8"/>
+  </svg>
+  <div class="word">Rise</div>
+</div>
 
 <header class="app">
   <div class="wrap">
@@ -989,82 +1017,71 @@ function paintTimer() {
     '<button class="x" data-act="tstop" aria-label="Stop timer">&times;</button></div>';
 }
 
-/* One line a day. Three registers — straight motivation, funny, quirky —
-   interleaved so you never get the same tone two days running. Keyed to the
-   date, so it holds all day and turns over at midnight. */
+/* One quote a day, real and attributed — mostly basketball, with a joke every
+   fourth day. Keyed to the date: it holds all day and turns over at midnight. */
 var QUOTES = [
-  "You do not need a better programme. You need week nine.",
-  "The rim has never once moved. Deeply annoying.",
-  "Expect nothing. Jump anyway.",
-  "Tendons keep their own calendar. Yours is short; theirs is not.",
-  "Quick feet. Tall spine. Loud arms.",
-  "Gravity remains undefeated. You are here to negotiate.",
-  "Stop while the jumps are still good. That is the whole skill.",
-  "Your calves are a personality now. Accept it.",
-  "This time, this year.",
-  "The best athletes are the ones still healthy in week twenty.",
-  "Be a spring, not a hammer.",
-  "Nobody has ever regretted the third minute of rest. Nobody.",
-  "Consistency is unglamorous and undefeated.",
-  "You are not tired. You are five centimetres from insufferable.",
-  "Short ground, long air.",
-  "Progress here is measured in centimetres and months.",
-  "Fall into the floor and let it hand you back.",
-  "The squat rack is not a coat hook. Today it is yours.",
-  "Twenty-four weeks is short. Show up for all of them.",
-  "Yes, the pogo drills look ridiculous. Do them anyway.",
-  "The floor is a trampoline you have to convince.",
-  "Your ceiling this block is not your ceiling.",
-  "Jump like the rim owes you money.",
-  "Ego lifts are how you meet a physiotherapist.",
-  "Two clean attempts beat ten tired ones.",
-  "Nobody claps at the gym. Jump anyway.",
-  "Steal the last step. Give back the height.",
-  "Speed into the plant. Everything else is detail.",
-  "Count contacts, not feelings.",
-  "You will graze the rim and celebrate like it went in.",
-  "Strength is the lever. Speed is the hand on it.",
-  "The tibialis raise: least glamorous, quietly essential.",
-  "Land quiet. Leave loud.",
-  "Fresh and few beats tired and many.",
-  "You are a pogo stick with opinions.",
-  "Your ankles have filed a complaint. Do the mobility.",
-  "The rim does not move. Everything else is up to you.",
-  "Three minutes of rest feels like a prank. It is not.",
-  "Ask the floor politely. Then insist.",
-  "One good attempt is worth the whole session.",
-  "Two feet, one intention.",
-  "Half of this programme is standing still on purpose.",
-  "Land like you plan to jump again tomorrow.",
-  "You are one deload away from feeling like an athlete.",
-  "Make the ground regret it.",
-  "The deload is not time off. It is when the work lands.",
-  "The penultimate step is the whole plot.",
-  "Missing the rim is just a very close touch.",
-  "Do less than you can, more often than you want.",
-  "Bulgarian split squats were named by someone who disliked you.",
-  "Be boring for eight weeks. Be dangerous after.",
-  "The hardest discipline is stopping early.",
-  "Today is a deposit, not a withdrawal.",
-  "Nobody is filming. That is the only thing saving you.",
-  "Quality is the only volume that counts.",
-  "The plan says four sets. The plan is not negotiating.",
-  "Train the takeoff. Let the landing train you.",
-  "Recover on purpose, or recover by injury.",
-  "Get low, then leave.",
-  "Everything hurts and the rim is still up there. Rude.",
-  "Sleep is the training you get paid for.",
-  "Warm up like someone who intends to walk tomorrow.",
-  "Rhythm beats effort. Every time.",
-  "Bar speed is the honest number. The plate is just a plate.",
-  "Cheat the horizontal into vertical.",
-  "Somewhere a rim is talking about you. Not kindly.",
-  "Fast feet, long last step, arms to the sky.",
-  "Your knees have notes. Read them before Thursday.",
-  "Stiff ankles, soft knees, big arms.",
-  "Nobody ever dunked by grinding a squat.",
-  "The best jumpers look unhurried.",
-  "Leg day is every day when the goal is airborne."
+  ["I've failed over and over and over again in my life. And that is why I succeed.", "Michael Jordan"],
+  ["Me shooting 40% at the foul line is just God's way to say nobody's perfect.", "Shaquille O'Neal"],
+  ["I can accept failure, everyone fails at something. But I can't accept not trying.", "Michael Jordan"],
+  ["I don't read the stories about myself. I just look at the pictures.", "Shaquille O'Neal"],
+  ["If you do the work, you get rewarded. There are no shortcuts in life.", "Michael Jordan"],
+  ["Great things come from hard work and perseverance. No excuses.", "Kobe Bryant"],
+  ["Obstacles don't have to stop you. If you run into a wall, figure out how to climb it.", "Michael Jordan"],
+  ["I'm tired of hearing about money. I just want to play the game, drink Pepsi, wear Reebok.", "Shaquille O'Neal"],
+  ["Talent wins games, but teamwork and intelligence win championships.", "Michael Jordan"],
+  ["Everything negative — pressure, challenges — is all an opportunity for me to rise.", "Kobe Bryant"],
+  ["I know fear is an obstacle for some people, but it's an illusion to me.", "Michael Jordan"],
+  ["If you're afraid to fail, then you're probably going to fail.", "Kobe Bryant"],
+  ["Some people want it to happen, some wish it would happen, others make it happen.", "Michael Jordan"],
+  ["I have nothing in common with lazy people who blame others for their lack of success.", "Kobe Bryant"],
+  ["You must expect great things of yourself before you can do them.", "Michael Jordan"],
+  ["I'm the Big Aristotle.", "Shaquille O'Neal"],
+  ["The most important thing is to try and inspire people so they can be great at whatever they want to do.", "Kobe Bryant"],
+  ["The only difference between a good shot and a bad shot is if it goes in or not.", "Charles Barkley"],
+  ["The moment you give up is the moment you let someone else win.", "Kobe Bryant"],
+  ["I've got a theory that if you give 100% all of the time, somehow things will work out in the end.", "Larry Bird"],
+  ["I can't relate to lazy people. We don't speak the same language.", "Kobe Bryant"],
+  ["Push yourself again and again. Don't give an inch until the final buzzer sounds.", "Larry Bird"],
+  ["Be quick, but don't hurry.", "John Wooden"],
+  ["I got paid to play basketball, which is a scam. I get paid to watch basketball, which is a scam.", "Charles Barkley"],
+  ["If you're not making mistakes, then you're not doing anything.", "John Wooden"],
+  ["I've got a technique. It's called just go get the damn ball.", "Charles Barkley"],
+  ["Be more concerned with your character than your reputation.", "John Wooden"],
+  ["I'm not a role model.", "Charles Barkley"],
+  ["You don't have to be the biggest or the fastest. It's courage that counts.", "John Wooden"],
+  ["Success is a result of consistent practice of winning skills. There is no luck involved.", "Bill Russell"],
+  ["Don't let what you cannot do interfere with what you can do.", "John Wooden"],
+  ["Concentration and mental toughness are the margins of victory.", "Bill Russell"],
+  ["Failing to prepare is preparing to fail.", "John Wooden"],
+  ["All I know about Angola is Angola's in trouble.", "Charles Barkley"],
+  ["It's what you learn after you know it all that counts.", "John Wooden"],
+  ["Create unselfishness as the most important team attribute.", "Bill Russell"],
+  ["Little things make big things happen.", "John Wooden"],
+  ["The most important measure of how good a game I played was how much better I made my teammates play.", "Bill Russell"],
+  ["Being a professional is doing the things you love to do, on the days you don't feel like doing them.", "Julius Erving"],
+  ["We're talking about practice. Not a game. Practice.", "Allen Iverson"],
+  ["If you don't do what's best for your body, you're the one who comes up on the short end.", "Julius Erving"],
+  ["Hard work beats talent when talent fails to work hard.", "Tim Notke"],
+  ["Ask not what your teammates can do for you. Ask what you can do for your teammates.", "Magic Johnson"],
+  ["Nobody roots for Goliath.", "Wilt Chamberlain"],
+  ["When you are not practicing, someone somewhere is practicing, and when you meet him he will win.", "Bill Bradley"],
+  ["You can't get much done in life if you only work on the days when you feel good.", "Jerry West"],
+  ["You can't win unless you learn how to lose.", "Kareem Abdul-Jabbar"],
+  ["If you make every game a life-and-death proposition, you'll be dead a lot.", "Dean Smith"],
+  ["One man can be a crucial ingredient on a team, but one man cannot make a team.", "Kareem Abdul-Jabbar"],
+  ["The strength of the team is each individual member. The strength of each member is the team.", "Phil Jackson"],
+  ["Ball don't lie.", "Rasheed Wallace"],
+  ["Good teams become great when the members trust each other enough to surrender the me for the we.", "Phil Jackson"],
+  ["It's not what you tell your players that counts. It's what they hear.", "Red Auerbach"],
+  ["Champions play as they practice.", "Pat Riley"],
+  ["Anything is possible!", "Kevin Garnett"],
+  ["Excellence is the gradual result of always striving to do better.", "Pat Riley"],
+  ["Basketball is a game of confidence, and confidence comes from preparation.", "Stephen Curry"],
+  ["There are only two options regarding commitment. You're either in or you're out.", "Pat Riley"],
+  ["Nothing is given. Everything is earned.", "LeBron James"],
+  ["We're going to turn this team around 360 degrees.", "Jason Kidd"],
+  ["What to do with a mistake: recognize it, admit it, learn from it, forget it.", "Dean Smith"],
+  ["When you win, you're never as good as you think you are; when you lose, you're never as bad.", "Gregg Popovich"]
 ];
 function quoteFor(week, dk) {
   var d = dateOf(week, dk);
@@ -1185,7 +1202,8 @@ function viewToday() {
     h += '<div class="alert acc"><b>Dunk window.</b> Full 20 min warm-up, 3 minutes between attempts. Stop when two attempts in a row are clearly below your best of the day.</div>';
   }
 
-  h += '<section class="blk quote"><i></i><p>' + esc(quoteFor(week, dk)) + "</p></section>";
+  var qt = quoteFor(week, dk);
+  h += '<section class="blk quote"><i></i><p>' + esc(qt[0]) + "</p><cite>" + esc(qt[1]) + "</cite></section>";
   var dm = dayMinutes(week, dk);
   if (dm > 5) {
     h += '<div class="daytime"><b>' + fmtMins(dm) + "</b><span>" +
@@ -1820,6 +1838,27 @@ if (pos && !pos.before && !pos.after) { S.ui.w = pos.w; S.ui.d = pos.d; }
 S.ui.pickW = S.ui.pickW || S.ui.w;
 render();
 connect();
+
+/* Hold the launch screen briefly so it reads as a launch rather than a flash,
+   then fade it out. Never let it outlast 2 seconds, whatever the fonts do. */
+(function () {
+  var splash = el("splash");
+  if (!splash) return;
+  var shown = Date.now();
+  function done() {
+    var wait = Math.max(0, 650 - (Date.now() - shown));
+    setTimeout(function () {
+      splash.dataset.off = "1";
+      setTimeout(function () { splash.remove(); }, 450);
+    }, wait);
+  }
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(done).catch(done);
+  } else {
+    done();
+  }
+  setTimeout(done, 2000);
+})();
 
 })();
 
