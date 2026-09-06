@@ -1,0 +1,1354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rise</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rise">
+<meta name="application-name" content="Rise">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#EDE9E2">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#15120E">
+<meta name="description" content="24-week two-foot dunk program tracker.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>
+  html{color-scheme:light dark}
+  body{margin:0;font-size:14px}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>Rise</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --ground:#EDE9E2; --surface:#FBFAF8; --raise:#FFFFFF;
+  --ink:#191512; --ink-2:#4A423A; --muted:#6E645A; --faint:#948A7E;
+  --line:#DAD3C8; --line-soft:#E6E0D6;
+  --accent:#D9450F; --accent-ink:#FFFFFF; --accent-wash:#F7E3DA;
+  --ok:#2E7355; --ok-ink:#FFFFFF; --ok-wash:#DFEDE6;
+  --warn:#A96A00; --warn-ink:#FFFFFF; --warn-wash:#F5E9D2;
+  --crit:#A62A1C; --crit-wash:#F6DED9;
+  --shadow:0 1px 2px rgba(25,21,18,.06), 0 6px 18px rgba(25,21,18,.06);
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#15120E; --surface:#1E1A15; --raise:#262119;
+    --ink:#EFE9E0; --ink-2:#CBC2B6; --muted:#9A9086; --faint:#7C7268;
+    --line:#332B23; --line-soft:#2A241D;
+    --accent:#FF6A33; --accent-ink:#1A0E07; --accent-wash:#392215;
+    --ok:#4FB78A; --ok-ink:#08150F; --ok-wash:#16281F;
+    --warn:#E0A030; --warn-ink:#211903; --warn-wash:#2E2312;
+    --crit:#E8614F; --crit-wash:#341813;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#15120E; --surface:#1E1A15; --raise:#262119;
+  --ink:#EFE9E0; --ink-2:#CBC2B6; --muted:#9A9086; --faint:#7C7268;
+  --line:#332B23; --line-soft:#2A241D;
+  --accent:#FF6A33; --accent-ink:#1A0E07; --accent-wash:#392215;
+  --ok:#4FB78A; --ok-ink:#08150F; --ok-wash:#16281F;
+  --warn:#E0A030; --warn-ink:#211903; --warn-wash:#2E2312;
+  --crit:#E8614F; --crit-wash:#341813;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.3);
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--ground); color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  padding-bottom:calc(76px + env(safe-area-inset-bottom));
+}
+.wrap{max-width:560px;margin:0 auto;padding:0 14px}
+h1,h2,h3{margin:0;text-wrap:balance}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+
+header.app{
+  position:sticky;top:0;z-index:40;background:var(--ground);
+  border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top);
+}
+.hbar{display:flex;align-items:center;gap:8px;padding:9px 0 8px}
+.hnav{display:flex;align-items:center;gap:2px}
+.hnav button{width:30px;height:30px;display:grid;place-items:center;color:var(--muted);border-radius:6px;font-size:17px;line-height:1}
+.hnav button:active{background:var(--line-soft)}
+.htitle{flex:1;min-width:0;display:flex;align-items:baseline;gap:7px}
+.htitle .wk{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:25px;line-height:1;white-space:nowrap}
+.htitle .dy{font-size:11.5px;color:var(--muted);letter-spacing:.09em;text-transform:uppercase;font-weight:600}
+.hchips{display:flex;gap:5px;overflow:hidden}
+.chip{
+  font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:12.5px;
+  letter-spacing:.07em;text-transform:uppercase;padding:3px 7px;border-radius:5px;
+  border:1px solid var(--line);color:var(--muted);white-space:nowrap;
+}
+.chip.phase{border-color:transparent;background:var(--line-soft);color:var(--ink-2)}
+.chip.build{border-color:var(--ok);color:var(--ok)}
+.chip.deload{border-color:transparent;background:var(--warn);color:var(--warn-ink)}
+.chip.window{border-color:transparent;background:var(--accent);color:var(--accent-ink)}
+
+.eyebrow{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13px;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--faint)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.panel.lift{box-shadow:var(--shadow)}
+section.blk{margin:18px 0}
+section.blk > .eyebrow{margin-bottom:8px;display:block}
+.note{color:var(--muted);font-size:13.5px}
+.sub{color:var(--faint);font-size:12.5px;margin-top:6px;line-height:1.45}
+
+.ready .row{display:flex;align-items:center;gap:10px;padding:10px 12px}
+.ready .row + .row{border-top:1px solid var(--line-soft)}
+.ready .lab{flex:1;font-size:13.5px;color:var(--ink-2)}
+.ready .lab small{display:block;color:var(--faint);font-size:11.5px;line-height:1.3}
+.scale{display:flex;gap:4px}
+.scale button{width:30px;height:30px;border-radius:7px;border:1px solid var(--line);
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);background:var(--raise)}
+.scale button[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.scale.s10 button{width:23px;height:28px;border-radius:5px;font-size:10.5px;padding:0}
+.scale button.hot[aria-pressed="true"]{background:var(--crit);border-color:var(--crit);color:#fff}
+.numin{width:64px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--raise);
+  text-align:right;font-family:"IBM Plex Mono",monospace;font-size:13.5px}
+.alert{display:block;padding:11px 12px;border-radius:var(--r);font-size:13.5px;line-height:1.45;margin-bottom:12px}
+.alert.crit{background:var(--crit-wash);color:var(--crit);border:1px solid var(--crit)}
+.alert.warn{background:var(--warn-wash);color:var(--warn);border:1px solid var(--warn)}
+.alert.acc{background:var(--accent-wash);color:var(--accent);border:1px solid var(--accent)}
+.alert b{font-weight:600}
+
+.sess{margin-bottom:14px}
+.sess-head{display:flex;align-items:center;gap:8px;padding:11px 12px;border-bottom:1px solid var(--line)}
+.sess-head .nm{flex:1;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:18px;letter-spacing:.02em}
+.sess-head .meta{font-size:11.5px;color:var(--faint);letter-spacing:.06em;text-transform:uppercase;
+  font-weight:600;font-family:"Barlow Condensed",sans-serif}
+.ex{padding:10px 12px}
+.ex + .ex,.ex + .exnote,.exnote + .ex,.exnote + .exnote,.ex + .exhead,.exnote + .exhead{border-top:1px solid var(--line-soft)}
+.ex-top{display:flex;align-items:flex-start;gap:10px}
+.ex-nm{flex:1;font-size:14.5px;line-height:1.35}
+.ex-nm .pre{color:var(--muted);font-size:12.5px;font-family:"IBM Plex Mono",monospace}
+.ex-nm .load{color:var(--accent);font-weight:600}
+.setrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.setpill{min-width:38px;height:34px;padding:0 9px;border:1px solid var(--line);border-radius:8px;
+  background:var(--raise);display:grid;place-items:center;
+  font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted);transition:background .12s,color .12s}
+.setpill[data-on="1"]{background:var(--ok);border-color:var(--ok);color:var(--ok-ink);font-weight:600}
+.tick{width:30px;height:30px;flex:none;border:1.5px solid var(--line);border-radius:8px;
+  display:grid;place-items:center;color:transparent;font-size:15px;line-height:1;background:var(--raise)}
+.tick[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:var(--ok-ink)}
+.exnote{padding:9px 12px;font-size:13px;color:var(--muted);display:flex;gap:9px}
+.exnote i{width:2px;background:var(--line);border-radius:2px;flex:none}
+.exhead{padding:10px 12px;background:var(--accent-wash);color:var(--accent);
+  font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:16px;letter-spacing:.08em}
+.loadin{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;color:var(--faint)}
+.loadin input{width:56px;padding:4px 7px;border:1px solid var(--line);border-radius:6px;background:var(--raise);
+  text-align:right;font-family:"IBM Plex Mono",monospace;font-size:12.5px}
+
+.hi{padding:12px}
+.hi-top{display:flex;align-items:center;gap:10px}
+.hi-n{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:34px;line-height:.9;
+  font-variant-numeric:tabular-nums;min-width:50px;text-align:center}
+.stepbtn{width:42px;height:42px;border:1px solid var(--line);border-radius:9px;font-size:20px;
+  display:grid;place-items:center;color:var(--ink-2);background:var(--raise)}
+.stepbtn:active{background:var(--line-soft)}
+.hi-lab{flex:1;font-size:12.5px;color:var(--muted);line-height:1.35}
+.bar{height:7px;background:var(--line-soft);border-radius:4px;overflow:hidden;margin-top:11px;display:flex}
+.bar i{display:block;height:100%}
+.bar i.fill{background:var(--ok)}
+.bar i.over{background:var(--crit)}
+.barlab{display:flex;justify-content:space-between;margin-top:6px;font-size:11.5px;color:var(--faint);
+  font-family:"IBM Plex Mono",monospace}
+
+.timer{position:fixed;right:12px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:45;
+  display:flex;align-items:center;gap:9px;padding:8px 13px;border-radius:24px;
+  background:var(--ink);color:var(--ground);box-shadow:var(--shadow);
+  font-family:"IBM Plex Mono",monospace;font-size:15px;font-weight:600}
+.timer.run{background:var(--accent);color:var(--accent-ink)}
+.timer.done{background:var(--ok);color:var(--ok-ink)}
+.timer small{font-size:10.5px;opacity:.8;letter-spacing:.06em;text-transform:uppercase;
+  font-family:"Barlow Condensed",sans-serif;font-weight:600}
+.timer .x{opacity:.7;font-size:17px;padding:0 1px;color:inherit}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--surface);
+  border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabs-in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.tab{padding:9px 0 10px;display:grid;justify-items:center;gap:3px;color:var(--faint)}
+.tab svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tab span{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:12px;letter-spacing:.09em;text-transform:uppercase}
+.tab[aria-selected="true"]{color:var(--accent)}
+
+.wkpick{display:flex;gap:6px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.wkpick::-webkit-scrollbar{display:none}
+.wkpick button{flex:none;width:38px;height:44px;border:1px solid var(--line);border-radius:9px;
+  background:var(--surface);display:grid;place-items:center;position:relative;
+  font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:16px;color:var(--ink-2)}
+.wkpick button u{position:absolute;bottom:5px;width:12px;height:2px;border-radius:2px;background:var(--warn)}
+.wkpick button u.w{background:var(--accent)}
+.wkpick button[aria-current="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.daylist .d{display:flex;align-items:center;gap:11px;padding:11px 12px;width:100%;text-align:left}
+.daylist .d + .d{border-top:1px solid var(--line-soft)}
+.daylist .dn{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--faint);width:32px;flex:none}
+.daylist .dt{flex:1;min-width:0;font-size:13.5px;line-height:1.35}
+.daylist .dt s{display:block;color:var(--faint);font-size:11.5px;text-decoration:none;
+  font-family:"IBM Plex Mono",monospace;margin-top:2px}
+.daylist .d.today{background:var(--accent-wash)}
+.daylist .d.today .dn{color:var(--accent)}
+.ringwrap{width:24px;height:24px;flex:none}
+
+.kv{display:grid;grid-template-columns:1fr auto}
+.kv > div{padding:9px 12px;font-size:13.5px}
+.kv > div:nth-child(2n){text-align:right;font-family:"IBM Plex Mono",monospace;color:var(--ink)}
+.kv > div:nth-child(2n+1){color:var(--muted)}
+.kv > div:nth-child(n+3){border-top:1px solid var(--line-soft)}
+.scrollx{overflow-x:auto}
+table.data{width:100%;border-collapse:collapse;font-size:12.5px;font-family:"IBM Plex Mono",monospace}
+table.data th{font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--faint);text-align:right;padding:8px 9px;white-space:nowrap;
+  border-bottom:1px solid var(--line)}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data td{padding:7px 9px;text-align:right;border-bottom:1px solid var(--line-soft);white-space:nowrap}
+table.data tr.test td{background:var(--warn-wash)}
+table.data tr.now td{box-shadow:inset 2px 0 0 var(--accent)}
+table.data td.empty{color:var(--faint)}
+
+.ruler{display:flex;padding:14px 12px 12px}
+.gapnum{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;padding-left:18px}
+.big{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:38px;line-height:.9;
+  font-variant-numeric:tabular-nums}
+.big small{display:block;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:12px;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:5px}
+.big.acc{color:var(--accent)}
+.stat3{display:grid;grid-template-columns:repeat(3,1fr)}
+.stat3 > div{padding:11px 12px;border-right:1px solid var(--line-soft)}
+.stat3 > div:last-child{border-right:none}
+.stat3 .v{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:23px;line-height:1;
+  font-variant-numeric:tabular-nums}
+.stat3 .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);
+  font-family:"Barlow Condensed",sans-serif;font-weight:600;margin-top:4px}
+.logform{display:grid;grid-template-columns:1fr auto}
+.logform > label{padding:10px 12px;font-size:13.5px;color:var(--muted);display:flex;align-items:center}
+.logform > div{padding:7px 12px;display:flex;justify-content:flex-end;align-items:center;gap:6px}
+.logform > *:nth-child(n+3){border-top:1px solid var(--line-soft)}
+.stagerow{display:flex;gap:10px;padding:11px 12px;align-items:flex-start;width:100%;text-align:left}
+.stagerow + .stagerow{border-top:1px solid var(--line-soft)}
+.stagerow .sn{width:26px;height:26px;flex:none;border-radius:50%;border:1.5px solid var(--line);
+  display:grid;place-items:center;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:14px;color:var(--faint)}
+.stagerow.on .sn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.stagerow.past .sn{background:var(--ok);border-color:var(--ok);color:var(--ok-ink)}
+.stagerow .sb{flex:1;min-width:0}
+.stagerow .st{font-size:14px;font-weight:600;line-height:1.3}
+.stagerow .sm{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4}
+.stagerow .sw{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--faint);margin-top:4px}
+
+details.acc{border-bottom:1px solid var(--line-soft)}
+details.acc:last-child{border-bottom:none}
+details.acc > summary{padding:12px;font-size:14px;font-weight:600;cursor:pointer;list-style:none;
+  display:flex;align-items:center;gap:9px}
+details.acc > summary::-webkit-details-marker{display:none}
+details.acc > summary::after{content:"+";margin-left:auto;color:var(--faint);font-size:17px;
+  font-family:"IBM Plex Mono",monospace}
+details.acc[open] > summary::after{content:"\2013"}
+details.acc .body{padding:0 12px 13px;font-size:13.5px;color:var(--ink-2);line-height:1.55}
+details.acc .body p{margin:0 0 8px}
+details.acc .body p:last-child{margin-bottom:0}
+.badge{font-family:"IBM Plex Mono",monospace;font-size:10.5px;font-weight:600;padding:2px 5px;border-radius:4px}
+.badge.hi{background:var(--accent);color:var(--accent-ink)}
+.badge.li{background:var(--line-soft);color:var(--muted)}
+.exlist .r{display:flex;gap:10px;padding:9px 12px;align-items:baseline}
+.exlist .r + .r{border-top:1px solid var(--line-soft)}
+.exlist .n{flex:1;font-size:13.5px}
+.exlist .n em{display:block;font-style:normal;color:var(--faint);font-size:12px;margin-top:2px;line-height:1.4}
+.exlist .s{font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--accent);white-space:nowrap}
+.exlist .l{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--faint);white-space:nowrap;
+  width:54px;text-align:right}
+
+.sheet{position:fixed;inset:0;z-index:60;display:none}
+.sheet[data-open="1"]{display:block}
+.sheet .scrim{position:absolute;inset:0;background:rgba(10,8,6,.5)}
+.sheet .card{position:absolute;left:0;right:0;bottom:0;max-height:88vh;overflow:auto;
+  background:var(--surface);border-radius:16px 16px 0 0;border-top:1px solid var(--line);
+  padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+.sheet .card > .in{max-width:560px;margin:0 auto;padding:4px 14px 0}
+.grab{width:36px;height:4px;border-radius:3px;background:var(--line);margin:9px auto 4px}
+.btn{display:block;width:100%;padding:12px;border-radius:var(--r);text-align:center;
+  font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:16px;letter-spacing:.06em;
+  text-transform:uppercase;border:1px solid var(--line);background:var(--raise);color:var(--ink)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.done{background:var(--ok);border-color:var(--ok);color:var(--ok-ink)}
+.btn.ghost{background:transparent;color:var(--muted)}
+.txtin{width:100%;padding:10px;border:1px solid var(--line);border-radius:var(--r);background:var(--raise);
+  font-size:14px;resize:vertical;min-height:62px;font-family:inherit}
+.syncline{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--faint);padding:2px 0 0}
+.syncdot{width:6px;height:6px;border-radius:50%;background:var(--faint);flex:none}
+.syncdot.on{background:var(--ok)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="app">
+  <div class="wrap">
+    <div class="hbar">
+      <div class="hnav">
+        <button id="prevd" aria-label="Previous day">&#8249;</button>
+        <button id="nextd" aria-label="Next day">&#8250;</button>
+      </div>
+      <div class="htitle">
+        <span class="wk" id="hWk">Week 1</span>
+        <span class="dy" id="hDy">Mon</span>
+      </div>
+      <div class="hchips" id="hChips"></div>
+      <div class="hnav">
+        <button id="btnToday" aria-label="Jump to today" title="Jump to today">&#9678;</button>
+        <button id="btnSet" aria-label="Settings" title="Settings">&#9881;</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="view"></main>
+<div id="timerHost"></div>
+
+<nav class="tabs">
+  <div class="tabs-in" id="tabs">
+    <button class="tab" data-tab="today" aria-selected="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h7"/><circle cx="19" cy="16" r="3"/></svg>
+      <span>Today</span></button>
+    <button class="tab" data-tab="week" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+      <span>Week</span></button>
+    <button class="tab" data-tab="prog" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16"/><path d="M8 15l3.5-4.5L15 13l4-6"/></svg>
+      <span>Progress</span></button>
+    <button class="tab" data-tab="guide" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H19v3H6.5"/></svg>
+      <span>Guide</span></button>
+  </div>
+</nav>
+
+<div class="sheet" id="sheet" data-open="0">
+  <div class="scrim" data-close="1"></div>
+  <div class="card"><div class="grab"></div><div class="in" id="sheetIn"></div></div>
+</div>
+
+<script id="program" type="application/json">{"weeks":[{"week":1,"phase":"1 Foundation","load":"Build","mon_lower":["Back squat 4x5 (Strength tab)","RDL 3x6","Bulgarian split squat 3x8/leg","Seated calf raise 3x12 (3s pause)","Tibialis raise 3x15","Standing calf 2x10"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 15 min","Ankle pogo 3x20 (LI)","CMJ 3x3","Approach jump 5x2 @ 85%","Broad jump 3x3","Rim-touch 5x1","Sprints 4x15 m","Shooting 20 min"],"tue_hi":33,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Snap-down 3x5 (landing, LI)","Box jump 4x3 (40 cm)","Pogo 3x20 (LI)","Bounds 3x4/side (LI)","Approach jump 4x1"],"thu_hi":16,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift (Strength tab)","Front squat 3x6","Hip thrust 3x8","Trap-bar jump 3x3 (light)","Nordic curl 2x5","Standing calf 3x10"],"sat_hi":9,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":58,"cap":60,"focus":"Build tendon tolerance and landing mechanics. Nothing here should feel maximal."},{"week":2,"phase":"1 Foundation","load":"Build","mon_lower":["Back squat 4x5 (Strength tab)","RDL 3x6","Bulgarian split squat 3x8/leg","Seated calf raise 3x12 (3s pause)","Tibialis raise 3x15","Standing calf 2x10"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 15 min","Ankle pogo 3x20 (LI)","CMJ 3x3","Approach jump 5x2 @ 85%","Broad jump 3x3","Rim-touch 5x1","Sprints 4x15 m","Shooting 20 min"],"tue_hi":33,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Snap-down 3x5 (landing, LI)","Box jump 4x3 (40 cm)","Pogo 3x20 (LI)","Bounds 3x4/side (LI)","Approach jump 4x1"],"thu_hi":16,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift (Strength tab)","Front squat 3x6","Hip thrust 3x8","Trap-bar jump 3x3 (light)","Nordic curl 2x5","Standing calf 3x10"],"sat_hi":9,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":58,"cap":60,"focus":"Build tendon tolerance and landing mechanics. Nothing here should feel maximal."},{"week":3,"phase":"1 Foundation","load":"Build","mon_lower":["Back squat 4x5 (Strength tab)","RDL 3x6","Bulgarian split squat 3x8/leg","Seated calf raise 3x12 (3s pause)","Tibialis raise 3x15","Standing calf 2x10"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 15 min","Ankle pogo 3x20 (LI)","CMJ 3x3","Approach jump 5x2 @ 85%","Broad jump 3x3","Rim-touch 5x1","Sprints 4x15 m","Shooting 20 min"],"tue_hi":33,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Snap-down 3x5 (landing, LI)","Box jump 4x3 (40 cm)","Pogo 3x20 (LI)","Bounds 3x4/side (LI)","Approach jump 4x1"],"thu_hi":16,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift (Strength tab)","Front squat 3x6","Hip thrust 3x8","Trap-bar jump 3x3 (light)","Nordic curl 2x5","Standing calf 3x10"],"sat_hi":9,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":58,"cap":60,"focus":"Build tendon tolerance and landing mechanics. Nothing here should feel maximal."},{"week":4,"phase":"1 Foundation","load":"DELOAD","mon_lower":["Back squat 3x5 @ deload % (Strength tab)","RDL 2x6","Split squat 2x8/leg","Seated calf 2x12","Tibialis 2x15","Cut all loads ~30%."],"mon_upper":"Upper A — Push\n(2 sets each)","tue_jump":["Warm-up 15 min","Pogo 2x15 (LI)","CMJ 2x3","Approach jump 3x2 @ 80%","Sprints 3x15 m","Shooting 20 min"],"tue_hi":12,"wed":["Upper B — Pull (2 sets each)","Core 2 sets","Mobility 15 min","Zero lower impact"],"thu":["Pogo 2x15 (LI)","Box jump 2x3 (low)","Snap-down 2x5 (landing)","Stop early if flat."],"thu_hi":6,"fri":["Full rest."],"sat_lower":["TEST DAY (fresh)","Standing reach, CMJ, max approach touch — 6 attempts, 3 min rest","Then trap-bar 2x5 easy","Log everything."],"sat_hi":6,"sat_upper":"Cuff + wrist only\n(10 min)","sun":["Full rest or","30 min light shooting."],"total_hi":24,"cap":60,"focus":"Deload + 4-week test. Reset training loads from the retest."},{"week":5,"phase":"1 Foundation","load":"Build","mon_lower":["Back squat 4x5 (Strength tab)","RDL 3x6","Bulgarian split squat 3x8/leg","Seated calf raise 3x12 (3s pause)","Tibialis raise 3x15","Standing calf 3x10"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 15 min","Pogo 3x20 (LI)","CMJ 3x3","Approach jump 6x2 @ 90%","Broad jump 3x3","Rim-touch 6x1","Sprints 5x20 m","Shooting 20 min"],"tue_hi":36,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Snap-down 3x5 (LI)","Box jump 4x3 (50 cm)","Altitude landing 3x3 (40 cm, LI)","Pogo 3x20 (LI)","Bounds 3x5/side (LI)","Approach jump 5x1"],"thu_hi":17,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift (Strength tab)","Front squat 3x6","Hip thrust 3x8","Trap-bar jump 3x3","Nordic curl 3x5","Standing calf 3x10"],"sat_hi":9,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":62,"cap":64,"focus":"Same shape, more load. Squat should be climbing weekly. Watch morning tendon stiffness."},{"week":6,"phase":"1 Foundation","load":"Build","mon_lower":["Back squat 4x5 (Strength tab)","RDL 3x6","Bulgarian split squat 3x8/leg","Seated calf raise 3x12 (3s pause)","Tibialis raise 3x15","Standing calf 3x10"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 15 min","Pogo 3x20 (LI)","CMJ 3x3","Approach jump 6x2 @ 90%","Broad jump 3x3","Rim-touch 6x1","Sprints 5x20 m","Shooting 20 min"],"tue_hi":36,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Snap-down 3x5 (LI)","Box jump 4x3 (50 cm)","Altitude landing 3x3 (40 cm, LI)","Pogo 3x20 (LI)","Bounds 3x5/side (LI)","Approach jump 5x1"],"thu_hi":17,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift (Strength tab)","Front squat 3x6","Hip thrust 3x8","Trap-bar jump 3x3","Nordic curl 3x5","Standing calf 3x10"],"sat_hi":9,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":62,"cap":64,"focus":"Same shape, more load. Squat should be climbing weekly. Watch morning tendon stiffness."},{"week":7,"phase":"1 Foundation","load":"Build","mon_lower":["Back squat 4x5 (Strength tab)","RDL 3x6","Bulgarian split squat 3x8/leg","Seated calf raise 3x12 (3s pause)","Tibialis raise 3x15","Standing calf 3x10"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 15 min","Pogo 3x20 (LI)","CMJ 3x3","Approach jump 6x2 @ 90%","Broad jump 3x3","Rim-touch 6x1","Sprints 5x20 m","Shooting 20 min"],"tue_hi":36,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Snap-down 3x5 (LI)","Box jump 4x3 (50 cm)","Altitude landing 3x3 (40 cm, LI)","Pogo 3x20 (LI)","Bounds 3x5/side (LI)","Approach jump 5x1"],"thu_hi":17,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift (Strength tab)","Front squat 3x6","Hip thrust 3x8","Trap-bar jump 3x3","Nordic curl 3x5","Standing calf 3x10"],"sat_hi":9,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":62,"cap":64,"focus":"Same shape, more load. Squat should be climbing weekly. Watch morning tendon stiffness."},{"week":8,"phase":"1 Foundation","load":"DELOAD","mon_lower":["Back squat 3x5 @ deload % (Strength tab)","RDL 2x6","Split squat 2x8/leg","Seated calf 2x12","Tibialis 2x15","Cut all loads ~30%."],"mon_upper":"Upper A — Push\n(2 sets each)","tue_jump":["Warm-up 15 min","Pogo 2x15 (LI)","CMJ 2x3","Approach jump 3x2 @ 80%","Sprints 3x15 m","Shooting 20 min"],"tue_hi":12,"wed":["Upper B — Pull (2 sets each)","Core 2 sets","Mobility 15 min","Zero lower impact"],"thu":["Pogo 2x15 (LI)","Box jump 2x3 (low)","Snap-down 2x5 (landing)","Stop early if flat."],"thu_hi":6,"fri":["Full rest."],"sat_lower":["TEST DAY (fresh)","Standing reach, CMJ, max approach touch — 6 attempts, 3 min rest","Then trap-bar 2x5 easy","Log everything."],"sat_hi":6,"sat_upper":"Cuff + wrist only\n(10 min)","sun":["Full rest or","30 min light shooting."],"total_hi":24,"cap":64,"focus":"Deload + 4-week test. Reset training loads from the retest."},{"week":9,"phase":"2 Strength→Power","load":"Build","mon_lower":["Back squat 4x4 (Strength tab)","RDL 3x5","Bulgarian split squat 3x6/leg","Seated calf raise 4x10 (3s pause)","Tibialis raise 3x15"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 15 min","Pogo 3x20 (LI)","CMJ 3x2","Approach jump 6x2 @ 90%","Broad jump 3x2","Rim-touch 6x1","Sprints 5x20 m","Shooting 20 min"],"tue_hi":30,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Snap-down 2x5 (LI)","DEPTH JUMP 3x3 — 30 cm box only","Box jump 3x3 (50 cm)","Jump squat 4x3 @ 20% BW (LI)","Pogo 3x20 (LI)"],"thu_hi":18,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift (Strength tab)","Front squat 3x4","Hip thrust 3x6","Trap-bar jump 3x3","Nordic curl 3x5","Standing calf 3x10"],"sat_hi":9,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":57,"cap":60,"focus":"First depth jumps — 30 cm box, land-and-stick before land-and-go. Cut them if knees complain."},{"week":10,"phase":"2 Strength→Power","load":"Build","mon_lower":["Back squat 4x4 (Strength tab)","RDL 3x5","Bulgarian split squat 3x6/leg","Seated calf raise 4x10 (3s pause)","Tibialis raise 3x15"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 15 min","Pogo 3x20 (LI)","CMJ 3x2","Approach jump 6x2 @ 90%","Broad jump 3x2","Rim-touch 6x1","Sprints 5x20 m","Shooting 20 min"],"tue_hi":30,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Snap-down 2x5 (LI)","DEPTH JUMP 3x3 — 30 cm box only","Box jump 3x3 (50 cm)","Jump squat 4x3 @ 20% BW (LI)","Pogo 3x20 (LI)"],"thu_hi":18,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift (Strength tab)","Front squat 3x4","Hip thrust 3x6","Trap-bar jump 3x3","Nordic curl 3x5","Standing calf 3x10"],"sat_hi":9,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":57,"cap":60,"focus":"First depth jumps — 30 cm box, land-and-stick before land-and-go. Cut them if knees complain."},{"week":11,"phase":"2 Strength→Power","load":"Build","mon_lower":["Back squat 4x4 (Strength tab)","RDL 3x5","Bulgarian split squat 3x6/leg","Seated calf raise 4x10 (3s pause)","Tibialis raise 3x15"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 15 min","Pogo 3x20 (LI)","CMJ 3x2","Approach jump 6x2 @ 90%","Broad jump 3x2","Rim-touch 6x1","Sprints 5x20 m","Shooting 20 min"],"tue_hi":30,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Snap-down 2x5 (LI)","DEPTH JUMP 3x3 — 30 cm box only","Box jump 3x3 (50 cm)","Jump squat 4x3 @ 20% BW (LI)","Pogo 3x20 (LI)"],"thu_hi":18,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift (Strength tab)","Front squat 3x4","Hip thrust 3x6","Trap-bar jump 3x3","Nordic curl 3x5","Standing calf 3x10"],"sat_hi":9,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":57,"cap":60,"focus":"First depth jumps — 30 cm box, land-and-stick before land-and-go. Cut them if knees complain."},{"week":12,"phase":"2 Strength→Power","load":"DELOAD","mon_lower":["Back squat 3x5 @ deload % (Strength tab)","RDL 2x6","Split squat 2x8/leg","Seated calf 2x12","Tibialis 2x15","Cut all loads ~30%."],"mon_upper":"Upper A — Push\n(2 sets each)","tue_jump":["Warm-up 15 min","Pogo 2x15 (LI)","CMJ 2x3","Approach jump 3x2 @ 80%","Sprints 3x15 m","Shooting 20 min"],"tue_hi":12,"wed":["Upper B — Pull (2 sets each)","Core 2 sets","Mobility 15 min","Zero lower impact"],"thu":["Pogo 2x15 (LI)","Box jump 2x3 (low)","Snap-down 2x5 (landing)","Stop early if flat."],"thu_hi":6,"fri":["Full rest."],"sat_lower":["DUNK WINDOW (fresh)","Full 20 min warm-up","Max touch test 4x1","Then 8 attempts at your current dunk stage","Stop when height drops."],"sat_hi":12,"sat_upper":"Cuff + wrist only\n(10 min)","sun":["Full rest or","30 min light shooting."],"total_hi":30,"cap":60,"focus":"Deload + dunk-attempt window. This is your best shot of the block — treat it like a game."},{"week":13,"phase":"3 Elastic Power","load":"Build","mon_lower":["Back squat 3x3 (Strength tab)","RDL 3x5","Split squat 2x6/leg","Seated calf raise 3x10","Tibialis raise 3x15"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 15 min","Pogo 3x20 (LI)","CMJ 2x2","Approach jump 6x2 @ 95%","Depth jump 4x2 (40 cm)","Rim / dunk attempts 6","Sprints 6x20 m","Shooting 15 min"],"tue_hi":30,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Depth jump → vertical 4x2 (40 cm)","Hurdle jump 4x3","Bounds 3x5/side (LI)","Jump squat 3x3 (LI)","Approach jump 5x1"],"thu_hi":25,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift (Strength tab)","Front squat 3x3","Hip thrust 3x5","Trap-bar jump 3x3","Nordic curl 3x5"],"sat_hi":9,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":64,"cap":66,"focus":"Shortest ground contacts of the whole program. Quality collapses fast — stop early."},{"week":14,"phase":"3 Elastic Power","load":"Build","mon_lower":["Back squat 3x3 (Strength tab)","RDL 3x5","Split squat 2x6/leg","Seated calf raise 3x10","Tibialis raise 3x15"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 15 min","Pogo 3x20 (LI)","CMJ 2x2","Approach jump 6x2 @ 95%","Depth jump 4x2 (40 cm)","Rim / dunk attempts 6","Sprints 6x20 m","Shooting 15 min"],"tue_hi":30,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Depth jump → vertical 4x2 (40 cm)","Hurdle jump 4x3","Bounds 3x5/side (LI)","Jump squat 3x3 (LI)","Approach jump 5x1"],"thu_hi":25,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift (Strength tab)","Front squat 3x3","Hip thrust 3x5","Trap-bar jump 3x3","Nordic curl 3x5"],"sat_hi":9,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":64,"cap":66,"focus":"Shortest ground contacts of the whole program. Quality collapses fast — stop early."},{"week":15,"phase":"3 Elastic Power","load":"Build","mon_lower":["Back squat 3x3 (Strength tab)","RDL 3x5","Split squat 2x6/leg","Seated calf raise 3x10","Tibialis raise 3x15"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 15 min","Pogo 3x20 (LI)","CMJ 2x2","Approach jump 6x2 @ 95%","Depth jump 4x2 (40 cm)","Rim / dunk attempts 6","Sprints 6x20 m","Shooting 15 min"],"tue_hi":30,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Depth jump → vertical 4x2 (40 cm)","Hurdle jump 4x3","Bounds 3x5/side (LI)","Jump squat 3x3 (LI)","Approach jump 5x1"],"thu_hi":25,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift (Strength tab)","Front squat 3x3","Hip thrust 3x5","Trap-bar jump 3x3","Nordic curl 3x5"],"sat_hi":9,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":64,"cap":66,"focus":"Shortest ground contacts of the whole program. Quality collapses fast — stop early."},{"week":16,"phase":"3 Elastic Power","load":"DELOAD","mon_lower":["Back squat 3x5 @ deload % (Strength tab)","RDL 2x6","Split squat 2x8/leg","Seated calf 2x12","Tibialis 2x15","Cut all loads ~30%."],"mon_upper":"Upper A — Push\n(2 sets each)","tue_jump":["Warm-up 15 min","Pogo 2x15 (LI)","CMJ 2x3","Approach jump 3x2 @ 80%","Sprints 3x15 m","Shooting 20 min"],"tue_hi":12,"wed":["Upper B — Pull (2 sets each)","Core 2 sets","Mobility 15 min","Zero lower impact"],"thu":["Pogo 2x15 (LI)","Box jump 2x3 (low)","Snap-down 2x5 (landing)","Stop early if flat."],"thu_hi":6,"fri":["Full rest."],"sat_lower":["DUNK WINDOW (fresh)","Full 20 min warm-up","Max touch test 4x1","Then 8 attempts at your current dunk stage","Stop when height drops."],"sat_hi":12,"sat_upper":"Cuff + wrist only\n(10 min)","sun":["Full rest or","30 min light shooting."],"total_hi":30,"cap":66,"focus":"Deload + dunk-attempt window. This is your best shot of the block — treat it like a game."},{"week":17,"phase":"4 Max Vertical","load":"Build","mon_lower":["Back squat 3x3 heavy (Strength tab)","RDL 2x5","Split squat 2x5/leg","Seated calf raise 3x8"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 20 min","Pogo 2x20 (LI)","Approach jump 8x1 @ MAX, 3 min rest","Depth jump 3x2 (45 cm)","Rim / dunk attempts 8","Sprints 6x20 m"],"tue_hi":22,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Depth jump 3x2","Hurdle jump 3x2","Approach jump 4x1","Jump squat 2x3 (LI)","Keep it under 35 min."],"thu_hi":16,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift 3x3 (Strength tab)","Hip thrust 3x4","Trap-bar jump 3x2","Nordic curl 2x5"],"sat_hi":6,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":44,"cap":48,"focus":"Highest intensity, lowest volume. Every approach jump is a real attempt."},{"week":18,"phase":"4 Max Vertical","load":"Build","mon_lower":["Back squat 3x3 heavy (Strength tab)","RDL 2x5","Split squat 2x5/leg","Seated calf raise 3x8"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 20 min","Pogo 2x20 (LI)","Approach jump 8x1 @ MAX, 3 min rest","Depth jump 3x2 (45 cm)","Rim / dunk attempts 8","Sprints 6x20 m"],"tue_hi":22,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Depth jump 3x2","Hurdle jump 3x2","Approach jump 4x1","Jump squat 2x3 (LI)","Keep it under 35 min."],"thu_hi":16,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift 3x3 (Strength tab)","Hip thrust 3x4","Trap-bar jump 3x2","Nordic curl 2x5"],"sat_hi":6,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":44,"cap":48,"focus":"Highest intensity, lowest volume. Every approach jump is a real attempt."},{"week":19,"phase":"4 Max Vertical","load":"Build","mon_lower":["Back squat 3x3 heavy (Strength tab)","RDL 2x5","Split squat 2x5/leg","Seated calf raise 3x8"],"mon_upper":"Upper A — Push","tue_jump":["Warm-up 20 min","Pogo 2x20 (LI)","Approach jump 8x1 @ MAX, 3 min rest","Depth jump 3x2 (45 cm)","Rim / dunk attempts 8","Sprints 6x20 m"],"tue_hi":22,"wed":["Upper B — Pull","Core: ab wheel 3x8,","Pallof 3x10/side","Ankle + hip mobility 10 min","Zero lower impact"],"thu":["Depth jump 3x2","Hurdle jump 3x2","Approach jump 4x1","Jump squat 2x3 (LI)","Keep it under 35 min."],"thu_hi":16,"fri":["Full rest.","No lifting, no court."],"sat_lower":["Trap-bar deadlift 3x3 (Strength tab)","Hip thrust 3x4","Trap-bar jump 3x2","Nordic curl 2x5"],"sat_hi":6,"sat_upper":"Upper C — Shoulder\nhealth & arms\n(optional)","sun":["Basketball, max 75 min.","Shooting + movement.","No max jumping.","OR full rest."],"total_hi":44,"cap":48,"focus":"Highest intensity, lowest volume. Every approach jump is a real attempt."},{"week":20,"phase":"4 Max Vertical","load":"DELOAD","mon_lower":["Back squat 3x5 @ deload % (Strength tab)","RDL 2x6","Split squat 2x8/leg","Seated calf 2x12","Tibialis 2x15","Cut all loads ~30%."],"mon_upper":"Upper A — Push\n(2 sets each)","tue_jump":["Warm-up 15 min","Pogo 2x15 (LI)","CMJ 2x3","Approach jump 3x2 @ 80%","Sprints 3x15 m","Shooting 20 min"],"tue_hi":12,"wed":["Upper B — Pull (2 sets each)","Core 2 sets","Mobility 15 min","Zero lower impact"],"thu":["Pogo 2x15 (LI)","Box jump 2x3 (low)","Snap-down 2x5 (landing)","Stop early if flat."],"thu_hi":6,"fri":["Full rest."],"sat_lower":["DUNK WINDOW (fresh)","Full 20 min warm-up","Max touch test 4x1","Then 8 attempts at your current dunk stage","Stop when height drops."],"sat_hi":12,"sat_upper":"Cuff + wrist only\n(10 min)","sun":["Full rest or","30 min light shooting."],"total_hi":30,"cap":48,"focus":"Deload + dunk-attempt window. This is your best shot of the block — treat it like a game."},{"week":21,"phase":"5 Dunk Conversion","load":"Build","mon_lower":["Back squat 2x3 (Strength tab)","RDL 2x4","Standing calf 2x8","Bar speed only. 30 min."],"mon_upper":"Upper A — Push\n(drop to 2 sets)","tue_jump":["Warm-up 20 min","Pogo 2x15 (LI)","Approach jump 5x1","Dunk attempts 8 at current stage","Sprints 4x20 m"],"tue_hi":13,"wed":["Upper B — Pull (2-3 sets)","Core 2 sets","Mobility 15 min","Zero lower impact"],"thu":["Depth jump 2x2","Approach jump 4x1","Mobility + soft tissue 15 min"],"thu_hi":8,"fri":["Full rest.","No lifting, no court."],"sat_lower":["DUNK WINDOW","20 min warm-up","2x2 rim touches","10 max attempts, 3 min rest","Then trap-bar jump 2x3"],"sat_hi":14,"sat_upper":"Cuff + wrist only\n(10 min)","sun":["Full rest or","45 min light shooting."],"total_hi":35,"cap":38,"focus":"Attempt-driven. Fatigue is the enemy — if you feel flat, skip Thursday entirely."},{"week":22,"phase":"5 Dunk Conversion","load":"Build","mon_lower":["Back squat 2x3 (Strength tab)","RDL 2x4","Standing calf 2x8","Bar speed only. 30 min."],"mon_upper":"Upper A — Push\n(drop to 2 sets)","tue_jump":["Warm-up 20 min","Pogo 2x15 (LI)","Approach jump 5x1","Dunk attempts 8 at current stage","Sprints 4x20 m"],"tue_hi":13,"wed":["Upper B — Pull (2-3 sets)","Core 2 sets","Mobility 15 min","Zero lower impact"],"thu":["Depth jump 2x2","Approach jump 4x1","Mobility + soft tissue 15 min"],"thu_hi":8,"fri":["Full rest.","No lifting, no court."],"sat_lower":["DUNK WINDOW","20 min warm-up","2x2 rim touches","10 max attempts, 3 min rest","Then trap-bar jump 2x3"],"sat_hi":14,"sat_upper":"Cuff + wrist only\n(10 min)","sun":["Full rest or","45 min light shooting."],"total_hi":35,"cap":38,"focus":"Attempt-driven. Fatigue is the enemy — if you feel flat, skip Thursday entirely."},{"week":23,"phase":"5 Dunk Conversion","load":"Build","mon_lower":["Back squat 2x3 (Strength tab)","RDL 2x4","Standing calf 2x8","Bar speed only. 30 min."],"mon_upper":"Upper A — Push\n(drop to 2 sets)","tue_jump":["Warm-up 20 min","Pogo 2x15 (LI)","Approach jump 5x1","Dunk attempts 8 at current stage","Sprints 4x20 m"],"tue_hi":13,"wed":["Upper B — Pull (2-3 sets)","Core 2 sets","Mobility 15 min","Zero lower impact"],"thu":["Depth jump 2x2","Approach jump 4x1","Mobility + soft tissue 15 min"],"thu_hi":8,"fri":["Full rest.","No lifting, no court."],"sat_lower":["DUNK WINDOW","20 min warm-up","2x2 rim touches","10 max attempts, 3 min rest","Then trap-bar jump 2x3"],"sat_hi":14,"sat_upper":"Cuff + wrist only\n(10 min)","sun":["Full rest or","45 min light shooting."],"total_hi":35,"cap":38,"focus":"Attempt-driven. Fatigue is the enemy — if you feel flat, skip Thursday entirely."},{"week":24,"phase":"5 Dunk Conversion","load":"TEST","mon_lower":["Back squat 2x3 @ 65%","RDL 2x4 light","Bar speed only. In and out in 30 min."],"mon_upper":"Upper A — Push\n(2 sets, light)","tue_jump":["FULL TEST, fresh","Standing reach","CMJ 3x1","Max approach touch 6x1, 3 min rest","Log in Jump Log"],"tue_hi":6,"wed":["Upper B — Pull (light)","Mobility 15 min","Zero lower impact"],"thu":["Rest, or 15 min mobility + 5 easy pogo sets.","No jumping."],"thu_hi":0,"fri":["Full rest."],"sat_lower":["DUNK DAY","20 min warm-up","2x2 rim touches","12 max dunk attempts, 3 min rest each","Stop the moment height drops."],"sat_hi":12,"sat_upper":"—","sun":["Full rest.","Then plan the next block."],"total_hi":18,"cap":38,"focus":"Peak freshness. Everything this week exists to serve Saturday."}],"strength":[{"week":1,"phase":"1 Foundation","squat_scheme":"4x5","squat_pct":0.62,"squat_kg":50,"tb_scheme":"3x5","tb_pct":0.62,"tb_kg":72.5,"front_kg":35,"notes":"Set the baseline. RPE 6-7. Leave 3 reps in reserve."},{"week":2,"phase":"1 Foundation","squat_scheme":"4x5","squat_pct":0.65,"squat_kg":52.5,"tb_scheme":"3x5","tb_pct":0.65,"tb_kg":75,"front_kg":37.5,"notes":"Technique is the only thing being trained this week."},{"week":3,"phase":"1 Foundation","squat_scheme":"4x5","squat_pct":0.68,"squat_kg":55,"tb_scheme":"3x5","tb_pct":0.68,"tb_kg":80,"front_kg":40,"notes":"First week it should feel like work. RPE 7."},{"week":4,"phase":"1 Foundation","squat_scheme":"3x5","squat_pct":0.58,"squat_kg":47.5,"tb_scheme":"2x5","tb_pct":0.58,"tb_kg":67.5,"front_kg":35,"notes":"DELOAD + test. Saturday is a jump test, not a lift."},{"week":5,"phase":"1 Foundation","squat_scheme":"4x5","squat_pct":0.67,"squat_kg":55,"tb_scheme":"3x5","tb_pct":0.68,"tb_kg":80,"front_kg":40,"notes":"Back to building. Move the bar fast on every rep."},{"week":6,"phase":"1 Foundation","squat_scheme":"4x5","squat_pct":0.7,"squat_kg":57.5,"tb_scheme":"3x5","tb_pct":0.71,"tb_kg":82.5,"front_kg":42.5,"notes":"RPE 7-8. Stop the set if bar speed drops noticeably."},{"week":7,"phase":"1 Foundation","squat_scheme":"4x5","squat_pct":0.72,"squat_kg":60,"tb_scheme":"3x5","tb_pct":0.74,"tb_kg":87.5,"front_kg":42.5,"notes":"Heaviest 5s of the program. No grinding."},{"week":8,"phase":"1 Foundation","squat_scheme":"3x5","squat_pct":0.6,"squat_kg":50,"tb_scheme":"2x5","tb_pct":0.6,"tb_kg":70,"front_kg":35,"notes":"DELOAD + retest. Enter the new 1RM on Overview."},{"week":9,"phase":"2 Str→Power","squat_scheme":"4x4","squat_pct":0.72,"squat_kg":60,"tb_scheme":"4x3","tb_pct":0.75,"tb_kg":87.5,"front_kg":42.5,"notes":"Reps drop, intent goes up. Concentric as fast as possible."},{"week":10,"phase":"2 Str→Power","squat_scheme":"4x4","squat_pct":0.75,"squat_kg":62.5,"tb_scheme":"4x3","tb_pct":0.78,"tb_kg":90,"front_kg":45,"notes":"RPE 8 ceiling. Depth jumps start Thursday — manage total load."},{"week":11,"phase":"2 Str→Power","squat_scheme":"4x4","squat_pct":0.78,"squat_kg":62.5,"tb_scheme":"4x3","tb_pct":0.8,"tb_kg":92.5,"front_kg":45,"notes":"Hardest strength week so far. Sleep is the limiter now."},{"week":12,"phase":"2 Str→Power","squat_scheme":"3x4","squat_pct":0.65,"squat_kg":52.5,"tb_scheme":"3x3","tb_pct":0.65,"tb_kg":75,"front_kg":37.5,"notes":"DELOAD. Saturday = dunk window 1. Show up fresh."},{"week":13,"phase":"3 Elastic","squat_scheme":"3x3","squat_pct":0.78,"squat_kg":62.5,"tb_scheme":"3x3","tb_pct":0.78,"tb_kg":90,"front_kg":45,"notes":"Heavy triples. Full 3 min rest. Speed off the floor is the metric."},{"week":14,"phase":"3 Elastic","squat_scheme":"3x3","squat_pct":0.81,"squat_kg":65,"tb_scheme":"3x3","tb_pct":0.81,"tb_kg":95,"front_kg":47.5,"notes":"Strength is now maintenance-plus. Jump quality outranks the lift."},{"week":15,"phase":"3 Elastic","squat_scheme":"3x3","squat_pct":0.84,"squat_kg":67.5,"tb_scheme":"3x3","tb_pct":0.84,"tb_kg":97.5,"front_kg":47.5,"notes":"If bar speed is slow, drop 5 kg. The number is not the point."},{"week":16,"phase":"3 Elastic","squat_scheme":"2x3","squat_pct":0.65,"squat_kg":52.5,"tb_scheme":"2x3","tb_pct":0.65,"tb_kg":75,"front_kg":37.5,"notes":"DELOAD. Saturday = dunk window 2."},{"week":17,"phase":"4 Max Vert","squat_scheme":"3x3","squat_pct":0.82,"squat_kg":67.5,"tb_scheme":"3x3","tb_pct":0.82,"tb_kg":95,"front_kg":47.5,"notes":"Retest week done — new 1RM should be in on Overview."},{"week":18,"phase":"4 Max Vert","squat_scheme":"3x3","squat_pct":0.85,"squat_kg":70,"tb_scheme":"3x3","tb_pct":0.85,"tb_kg":100,"front_kg":50,"notes":"Peak strength loads. Two working sets is enough if you feel heavy."},{"week":19,"phase":"4 Max Vert","squat_scheme":"3x3","squat_pct":0.87,"squat_kg":70,"tb_scheme":"3x3","tb_pct":0.87,"tb_kg":102.5,"front_kg":50,"notes":"Heaviest week of the program. Then it comes down for good."},{"week":20,"phase":"4 Max Vert","squat_scheme":"2x3","squat_pct":0.68,"squat_kg":55,"tb_scheme":"2x3","tb_pct":0.68,"tb_kg":80,"front_kg":40,"notes":"DELOAD. Saturday = dunk window 3."},{"week":21,"phase":"5 Dunk","squat_scheme":"2x3","squat_pct":0.82,"squat_kg":67.5,"tb_scheme":"2x3","tb_pct":0.78,"tb_kg":90,"front_kg":47.5,"notes":"Maintenance only. The lift exists to keep the CNS switched on."},{"week":22,"phase":"5 Dunk","squat_scheme":"2x3","squat_pct":0.8,"squat_kg":65,"tb_scheme":"2x3","tb_pct":0.75,"tb_kg":87.5,"front_kg":47.5,"notes":"Cut a set if legs feel heavy on Tuesday."},{"week":23,"phase":"5 Dunk","squat_scheme":"2x3","squat_pct":0.75,"squat_kg":62.5,"tb_scheme":"2x3","tb_pct":0.7,"tb_kg":82.5,"front_kg":45,"notes":"Very low fatigue. You should feel springy, not strong."},{"week":24,"phase":"5 Dunk","squat_scheme":"2x3","squat_pct":0.65,"squat_kg":52.5,"tb_scheme":"2x3","tb_pct":0.6,"tb_kg":70,"front_kg":37.5,"notes":"TEST WEEK. Movement only. Saturday is the whole point."}],"upper":{"A":{"key":"A","title":"UPPER A — PUSH   (Monday, after lower strength, ~35 min)","ex":[{"name":"Bench press","sets":"4 x 6","load":"RPE 7-8","purpose":"Primary press. Add 2.5 kg when all 4 sets hit 6 clean."},{"name":"Incline DB press","sets":"3 x 8","load":"RPE 7-8","purpose":"Upper chest and front delt without loading the shoulder like a barbell does."},{"name":"Standing DB overhead press","sets":"3 x 8","load":"RPE 7","purpose":"Standing, not seated — trains the trunk to transmit force, same as a jump does."},{"name":"Lateral raise","sets":"3 x 12","load":"RPE 8","purpose":"Delt volume with no joint cost. Light, controlled, no swinging."},{"name":"Triceps pushdown or overhead ext.","sets":"3 x 12","load":"RPE 8","purpose":"Elbow health for shooters. Do not skip."},{"name":"Ab wheel","sets":"3 x 8","load":"Bodyweight","purpose":"Anti-extension. Carries directly into the jump plant."}]},"B":{"key":"B","title":"UPPER B — PULL   (Wednesday, standalone, ~45 min)","ex":[{"name":"Weighted pull-up","sets":"4 x 5-8","load":"RPE 7-8","purpose":"Primary vertical pull. Add weight before adding reps past 8."},{"name":"Chest-supported row","sets":"3 x 10","load":"RPE 7-8","purpose":"Horizontal pull with no lower-back cost on a rest day."},{"name":"Single-arm DB row","sets":"3 x 10 / side","load":"RPE 8","purpose":"Unilateral. Fixes the left-right asymmetry most shooters carry."},{"name":"Face pull","sets":"3 x 15","load":"Light","purpose":"Rear delt and external rotation. The highest-value 5 minutes in this tab."},{"name":"Prone Y-T-W","sets":"2 x 10 each","load":"Bodyweight or 1-2 kg","purpose":"Scapular control. Slow, no momentum."},{"name":"Hammer curl","sets":"3 x 10","load":"RPE 8","purpose":"Elbow and forearm resilience."},{"name":"Pallof press","sets":"3 x 10 / side","load":"Moderate","purpose":"Anti-rotation. Pairs with the ab wheel on Monday."},{"name":"Ankle + hip mobility","sets":"10 min","load":"—","purpose":"Dorsiflexion drills, couch stretch, 90/90. This is why Wednesday exists."}]},"C":{"key":"C","title":"UPPER C — SHOULDER HEALTH & ARMS   (Saturday, optional, ~25 min)","ex":[{"name":"Landmine press","sets":"3 x 8 / side","load":"RPE 7","purpose":"Pressing in the scapular plane. Kinder to the shooting shoulder than overhead."},{"name":"Scapular pull-up","sets":"3 x 8","load":"Bodyweight","purpose":"Teaches the shoulder blade to move before the arm does."},{"name":"Cable / band external rotation","sets":"3 x 15 / side","load":"Light","purpose":"Cuff. Non-negotiable if you shoot volume."},{"name":"Wrist flexion + extension","sets":"3 x 15 each","load":"Light","purpose":"Shooting wrist and the ball-control end of dunking."},{"name":"Farmer carry","sets":"3 x 30 m","load":"Heavy","purpose":"Grip, trunk, and the thing that eventually lets you palm a ball."},{"name":"Neck + upper trap isometrics","sets":"2 x 20 s","load":"Light","purpose":"Cheap insurance for a contact sport."}]}},"drills":[{"name":"Ankle pogo","intensity":"LI","contacts":"15-20","first":"Week 1","how":"Stiff ankles, knees near-locked, minimal ground time. Bounce from the calf and Achilles, not the hip.","fails":"Knees start bending — you have turned it into a squat jump."},{"name":"Snap-down","intensity":"LI","contacts":"5","first":"Week 1","how":"From tall, drop hard into the athletic landing position and freeze. Teaches deceleration before you train acceleration.","fails":"You land soft and quiet but out of position."},{"name":"Broad jump","intensity":"HI","contacts":"3","first":"Week 1","how":"Two-foot horizontal max effort. Stick the landing every rep. Excellent force-production check.","fails":"Landing is a stumble — reduce distance."},{"name":"Countermovement jump (CMJ)","intensity":"HI","contacts":"2-3","first":"Week 1","how":"Standing vertical, no steps. Your cleanest week-to-week progress metric because nothing about it varies.","fails":"You add a step. Then it is not a CMJ."},{"name":"Approach jump (two-foot)","intensity":"HI","contacts":"1-2","first":"Week 1","how":"Fast, faster, long penultimate step, quick double-foot plant, arms up hard. This is the actual competition lift.","fails":"The penultimate step shortens — you are decelerating too early."},{"name":"Rim touch","intensity":"HI","contacts":"1","first":"Week 1","how":"Approach jump with a target. Reach with one hand, not both.","fails":"You start reaching before you are at peak height."},{"name":"Box jump","intensity":"HI","contacts":"3","first":"Week 1","how":"Concentric-focused. Step down, never jump down. Height should let you land in a quarter squat, not a full one.","fails":"You need a deep catch to land — box is too tall."},{"name":"Bounds","intensity":"LI","contacts":"4-5 / side","first":"Week 1","how":"Alternate-leg horizontal bounding. Builds single-leg elastic quality and hamstring tolerance.","fails":"You are running, not bounding."},{"name":"Altitude landing","intensity":"LI","contacts":"3","first":"Week 5","how":"Step off a 40 cm box, absorb, stick. The prerequisite for depth jumps — do it for 4 weeks first.","fails":"Any knee valgus on landing. Stop and lower the box."},{"name":"Trap-bar jump","intensity":"LI","contacts":"2-3","first":"Week 1","how":"Light trap-bar (20-30% BW), jump for height, land soft. Bridges the strength and jump sessions.","fails":"Load is heavy enough that you barely leave the floor."},{"name":"Jump squat","intensity":"LI","contacts":"3-4","first":"Week 9","how":"20-30% bodyweight on the bar, maximum intent every rep.","fails":"Bar speed drops within a set — cut the set."},{"name":"Depth jump","intensity":"HI","contacts":"2-3","first":"Week 9","how":"Step off a 30 cm box, minimum ground contact, jump immediately. Highest-value and highest-risk drill in the program.","fails":"Ground contact is visibly long. Lower the box or stop."},{"name":"Depth jump → vertical","intensity":"HI","contacts":"2","first":"Week 13","how":"Depth jump straight into a max vertical reach. The most sport-specific plyometric here.","fails":"Second jump is lower than a fresh CMJ. You are fatigued."},{"name":"Hurdle jump","intensity":"HI","contacts":"2-3","first":"Week 13","how":"Continuous two-foot hops over 40-60 cm hurdles. Short contacts, no pause between.","fails":"You pause between hurdles — the elastic component is gone."},{"name":"Dunk attempt","intensity":"HI","contacts":"1","first":"Week 12","how":"Full approach, full intent, 3 minutes rest. Every attempt is a max effort and should be logged as one.","fails":"Two consecutive attempts clearly below your best. Stop for the day."},{"name":"Sprint (15-20 m)","intensity":"LI","contacts":"1","first":"Week 1","how":"Acceleration only, walk back recovery. Directly raises approach velocity, which raises jump height.","fails":"You are running past 25 m — this is not conditioning."}],"stages":[{"stage":"1","weeks":"1-8","goal":"Repeatable clean rim touch","touch":305,"attempts":"5-8","moveOn":"You can touch rim on 4 of 5 attempts when fresh, with a controlled landing every time.","stall":"Strength is the limiter. Stay in Phase 1 an extra 2 weeks rather than advancing."},{"stage":"2","weeks":"9-12","goal":"Full-hand rim grab and brief hang","touch":310,"attempts":"6-8","moveOn":"You can grab and hang from the rim, not just slap it.","stall":"Usually a technique issue: penultimate step too short. Film it from the side."},{"stage":"3","weeks":"13-16","goal":"Wrist above rim / tennis-ball dunk","touch":313,"attempts":"6-10","moveOn":"Multiple tennis-ball makes in one session.","stall":"Grip and ball control, not vertical. Add carries and wrist work on Saturday."},{"stage":"4","weeks":"17-20","goal":"Small ball or volleyball dunk","touch":316,"attempts":"6-10","moveOn":"Two or more clean makes in a session, both hands tried.","stall":"You are close on height but losing the ball at the top. Practise the release, not the jump."},{"stage":"5","weeks":"21-24","goal":"One-hand regulation ball, lob or self-toss","touch":320,"attempts":"8-12","moveOn":"Ball reaches the rim under control, even if it does not go down.","stall":"Expected. This is the honest edge of a 24-week block for this reach."},{"stage":"6","weeks":"Beyond","goal":"Regulation basketball dunk, self-generated","touch":320,"attempts":"8-12","moveOn":"It goes down. Then it goes down twice.","stall":"This is the 12-18 month goal. Block 2 of training, not this one."}],"rules":[{"title":"Warm-up","text":"15 minutes before any jump session, 20 in Phases 4-5. Easy movement, ankle rocks and dorsiflexion drills, calf raises, pogo progression, then 3 submaximal approach jumps. A masters athlete's warm-up is not optional and it does not shorten as the program goes on."},{"title":"Contact caps","text":"Every week on the schedule has a cap. If you exceed it, cut Thursday first, then Tuesday's accessory jumps. Never cut the deload to make room for more jumping."},{"title":"Max jump rest","text":"3 minutes between max approach jumps and dunk attempts. Yes, 3 — it feels absurd and it is the difference between training your peak and training your fatigue."},{"title":"Stop rule","text":"Stop when two consecutive attempts are clearly below your best of the day. That is the nervous system telling you the useful work is finished; everything after is injury risk with no upside."},{"title":"Pain rule","text":"Muscle fatigue and general soreness are fine. Sharp pain, or Achilles/patellar pain that worsens within a session, or pain that is still there on the second morning, means stop and modify. Tendon problems announce themselves quietly and then very loudly."},{"title":"AM tendon check","text":"Rate Achilles and patellar stiffness 1-5 in the first minute out of bed and log it. A 4-5 that persists past 48 hours means the next jump session becomes a mobility session. This single habit prevents most of what goes wrong in dunk programs."},{"title":"Deloads","text":"Weeks 4, 8, 12, 16 and 20 are real. Strength loads drop to ~60-68%, jump volume roughly halves. These are not optional and they are not the weeks to test a new box height."},{"title":"Sunday basketball","text":"Capped at 75 minutes, shooting and movement focus, no max jumping. If Sunday runs long or hard, Monday drops to technique work at 60% and the week continues from there."},{"title":"Sprints","text":"4-6 accelerations of 15-20 m on jump days. Approach velocity is one of the strongest predictors of two-foot jump height, and this is the cheapest way to raise it. Walk back between reps."},{"title":"Technique","text":"Fast, faster, long penultimate step, quick two-foot plant, arms driven up hard. Film from the side every 4 weeks. Most stalled dunk attempts are a short penultimate step, not a weak athlete."},{"title":"Test one-foot too","text":"In Week 1, test your running one-foot jump against your two-foot approach. If one-foot is higher by more than 3 cm, the whole program should pivot to a one-foot approach — the drills change, the strength work barely does. Find this out in Week 1, not Week 20."},{"title":"Testing","text":"Full test on Weeks 4, 8, 12, 16, 20 and 24 only, always fresh, never after a hard session. Do not 1RM test the squat at any point — estimate from a 3-5 rep max instead."},{"title":"Sleep","text":"The most powerful recovery variable available and the one most likely to be the actual limiter. Jump height is measurably lower after short sleep, and tendon repair happens overnight."},{"title":"Bodyweight","text":"Do not deliberately gain weight during this block. Jumping is a power-to-weight event, so strength gained at stable bodyweight is worth more than the same strength 4 kg heavier. Equally, do not under-fuel a program with this much output — that reliably costs both recovery and jump height."},{"title":"Missed sessions","text":"Miss one: skip it, do not stack it onto another day. Miss a week: repeat that week rather than jumping ahead. Miss three weeks: restart from the beginning of the current phase."},{"title":"When to stop the block","text":"Two consecutive test points with no improvement, or any tendon pain lasting more than a week, means the block is over. Take 2 weeks of easy training and restart from Phase 1. That is a normal outcome, not a failure."}],"principles":[{"t":"Tendon before tissue","d":"Achilles and patellar tendon adapt over 8-12 weeks, well behind muscle. Phase 1 runs 8 weeks for that reason alone."},{"t":"Count the contacts","d":"High-intensity takeoffs are the currency. Every week has a cap. Volume creep is the single most common cause of failure here."},{"t":"Real deloads exist","d":"Weeks 4, 8, 12, 16 and 20 are genuine down weeks, not copies of the week before."},{"t":"Two hard jump days","d":"Tue and Thu. Saturday is strength with minimal contacts. Sunday basketball is capped."},{"t":"Strength is the lever","d":"Squat sits near 1.1x bodyweight. That is the largest single pool of untapped vertical in this program."},{"t":"Speed is the other lever","d":"Approach velocity drives two-foot jump height. Short sprints are programmed, not optional."},{"t":"Quality over grinding","d":"Stop max jumping when height visibly drops. Stop lifting when bar speed drops. Never both in one session."},{"t":"Four shots, not one","d":"Dunk-attempt windows at Weeks 12, 16, 20 and 21-24. One peak is one roll of the dice."}],"targets":[{"label":"Week 0 — baseline","vert":70,"touch":300,"gap":20,"milestone":"Almost touching rim","w":0},{"label":"Week 4","vert":71,"touch":301,"gap":19,"milestone":"Landing mechanics clean; no tendon flare","w":4},{"label":"Week 8","vert":73,"touch":303,"gap":17,"milestone":"Squat +10-15%; rim touch repeatable when fresh","w":8},{"label":"Week 12","vert":76,"touch":306,"gap":14,"milestone":"Full-hand rim grab; brief hang","w":12},{"label":"Week 16","vert":79,"touch":309,"gap":11,"milestone":"Wrist clearly above rim; tennis-ball dunk","w":16},{"label":"Week 20","vert":82,"touch":312,"gap":8,"milestone":"Small ball / volleyball dunk","w":20},{"label":"Week 24","vert":84,"touch":314,"gap":6,"milestone":"Clean rim grab + hang; consistent small-ball dunks. Regulation ball = stretch goal.","w":24}],"phases":[{"phase":"Foundation","weeks":"1-8","objective":"Tendon capacity, landing mechanics, base strength","squat":"4x5","jump":"Moderate volume, submax intensity","cap":"60-64"},{"phase":"Strength → Power","weeks":"9-12","objective":"Force production; introduce reactive work","squat":"4x4","jump":"Moderate, first depth jumps","cap":"60"},{"phase":"Elastic Power","weeks":"13-16","objective":"Reactive / stretch-shortening ability","squat":"3x3","jump":"High, short ground contacts","cap":"66"},{"phase":"Max Vertical","weeks":"17-20","objective":"Maximise the two-foot approach jump","squat":"3x3 heavy","jump":"Low volume, max intensity","cap":"48"},{"phase":"Dunk Conversion","weeks":"21-24","objective":"Convert height into made dunks","squat":"2x3 maintenance","jump":"Attempt-driven, high quality","cap":"38"}],"athlete":{"bodyweight":75,"reach":230,"rim":305,"clearance":15,"dunkTouch":320,"squat1rm":81.7,"tb1rm":116.7}}</script>
+<script>
+/* Rise — 24-week two-foot dunk program tracker */
+(function () {
+"use strict";
+
+var P = JSON.parse(document.getElementById("program").textContent);
+var DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+var DAYNM = { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" };
+var DAYFULL = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
+var TESTWK = [4, 8, 12, 16, 20, 24];
+var WINDOWWK = [12, 16, 20, 21, 22, 23, 24];
+var LS = "rimgap.v1";
+
+/* ---------------- state ---------------- */
+
+var S = {
+  settings: {
+    bw: P.athlete.bodyweight, reach: P.athlete.reach, rim: P.athlete.rim,
+    dunkTouch: P.athlete.dunkTouch,
+    sq: [{ w: 1, kg: 70, reps: 5 }], tb: [{ w: 1, kg: 100, reps: 5 }],
+    start: null, theme: "auto"
+  },
+  weeks: {},
+  ui: { tab: "today", w: 1, d: "mon", pickW: 1 }
+};
+var db = null, saveTimers = {};
+
+function blankWeek() { return { updatedAt: 0, d: {}, log: {} }; }
+function wk(n) { if (!S.weeks[n]) S.weeks[n] = blankWeek(); return S.weeks[n]; }
+function day(n, dk) { var w = wk(n); if (!w.d[dk]) w.d[dk] = { s: {}, ld: {}, hi: null, rd: {}, note: "", done: false }; return w.d[dk]; }
+function wid(n) { return "w" + (n < 10 ? "0" + n : n); }
+
+function loadLocal() {
+  try {
+    var raw = localStorage.getItem(LS);
+    if (!raw) return;
+    var o = JSON.parse(raw);
+    if (o.settings) Object.assign(S.settings, o.settings);
+    if (o.weeks) S.weeks = o.weeks;
+    if (o.ui) Object.assign(S.ui, o.ui);
+  } catch (e) { /* first run, or storage blocked */ }
+}
+function saveLocal() {
+  try { localStorage.setItem(LS, JSON.stringify({ settings: S.settings, weeks: S.weeks, ui: S.ui })); }
+  catch (e) { /* storage blocked — session-only */ }
+}
+
+function touchWeek(n) {
+  wk(n).updatedAt = Date.now();
+  saveLocal();
+  pushWeek(n);
+}
+function pushWeek(n) {
+  if (!db) return;
+  clearTimeout(saveTimers[n]);
+  saveTimers[n] = setTimeout(function () {
+    db.doc("weeks/" + wid(n)).set(JSON.parse(JSON.stringify(S.weeks[n]))).catch(function () {});
+  }, 600);
+}
+function pushSettings() {
+  saveLocal();
+  if (!db) return;
+  clearTimeout(saveTimers.set);
+  saveTimers.set = setTimeout(function () {
+    db.doc("state/settings").set(JSON.parse(JSON.stringify(
+      Object.assign({}, S.settings, { updatedAt: Date.now() })))).catch(function () {});
+  }, 600);
+}
+
+async function connect() {
+  try {
+    if (!window.claude || typeof window.claude.use !== "function") return;
+    db = await window.claude.use("db");
+  } catch (e) { db = null; }
+  if (!db) return;
+  try {
+    var snap = await db.doc("state/settings").get();
+    if (snap.exists) {
+      var rem = snap.data();
+      if ((rem.updatedAt || 0) > (S.settings.updatedAt || 0)) Object.assign(S.settings, rem);
+    }
+    var qs = await db.collection("weeks").get();
+    qs.docs.forEach(function (ds) {
+      var n = parseInt(ds.id.replace("w", ""), 10);
+      var rem = ds.data();
+      if (!n || !rem) return;
+      if ((rem.updatedAt || 0) >= ((S.weeks[n] && S.weeks[n].updatedAt) || 0)) S.weeks[n] = rem;
+    });
+    saveLocal();
+    render();
+    var dot = document.querySelector(".syncdot"); if (dot) dot.classList.add("on");
+  } catch (e) { /* offline or refused — local copy stands */ }
+}
+
+/* ---------------- backup ---------------- */
+
+function backupBlob() {
+  return JSON.stringify({ app: "rimgap", v: 1, saved: new Date().toISOString(), settings: S.settings, weeks: S.weeks }, null, 1);
+}
+async function exportData() {
+  var name = "rise-" + isoDate(new Date()) + ".json";
+  var text = backupBlob();
+  try {
+    if (window.claude && typeof window.claude.use === "function") {
+      var dl = await window.claude.use("downloads");
+      if (dl) { await dl.save({ filename: name, data: text }); return; }
+    }
+  } catch (e) { /* declined or unavailable — fall through to a plain link */ }
+  try {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  } catch (e2) { alert("Could not save the file here. Open the app from your home screen and try again."); }
+}
+function importData(file) {
+  var fr = new FileReader();
+  fr.onload = function () {
+    var o;
+    try { o = JSON.parse(fr.result); } catch (e) { return alert("That file is not a Rise backup."); }
+    if (!o || o.app !== "rimgap" || !o.weeks) return alert("That file is not a Rise backup.");
+    if (!confirm("Replace everything on this device with the backup from " + (o.saved || "").slice(0, 10) + "?")) return;
+    Object.assign(S.settings, o.settings || {});
+    S.weeks = o.weeks;
+    S.settings.updatedAt = Date.now();
+    saveLocal(); pushSettings();
+    for (var n = 1; n <= 24; n++) if (S.weeks[n]) { S.weeks[n].updatedAt = Date.now(); pushWeek(n); }
+    sessCache = {};
+    closeSheet();
+  };
+  fr.readAsText(file);
+}
+
+/* ---------------- math ---------------- */
+
+function e1rm(w, r) { return w * (1 + r / 30); }
+function r25(x) { return Math.round(x / 2.5) * 2.5; }
+function fmtKg(x) { return (Math.round(x * 10) / 10).toString().replace(/\.0$/, ""); }
+
+function testFor(list, week) {
+  var best = null;
+  (list || []).forEach(function (t) { if (t && t.kg && t.reps && t.w <= week) { if (!best || t.w > best.w) best = t; } });
+  return best;
+}
+function oneRM(kind, week) {
+  var t = testFor(S.settings[kind], week);
+  return t ? e1rm(t.kg, t.reps) : null;
+}
+function strengthFor(week) {
+  var row = P.strength[week - 1];
+  var sq = oneRM("sq", week), tb = oneRM("tb", week);
+  var sqKg = sq ? r25(sq * row.squat_pct) : null;
+  return {
+    row: row,
+    sqKg: sqKg, sq1: sq,
+    tbKg: tb ? r25(tb * row.tb_pct) : null, tb1: tb,
+    fsKg: sqKg ? r25(sqKg * 0.72) : null
+  };
+}
+function targetAt(week) {
+  var t = P.targets, i;
+  for (i = 0; i < t.length; i++) if (t[i].w === week) return t[i].touch;
+  for (i = 0; i < t.length - 1; i++) {
+    if (week > t[i].w && week < t[i + 1].w) {
+      var f = (week - t[i].w) / (t[i + 1].w - t[i].w);
+      return t[i].touch + f * (t[i + 1].touch - t[i].touch);
+    }
+  }
+  return t[t.length - 1].touch;
+}
+function bestTouch() {
+  var b = null, bw = null;
+  for (var n = 1; n <= 24; n++) {
+    var l = S.weeks[n] && S.weeks[n].log;
+    if (l && l.app && (b === null || l.app > b)) { b = l.app; bw = n; }
+  }
+  return { v: b, w: bw };
+}
+function currentStage(week) {
+  for (var i = 0; i < P.stages.length; i++) {
+    var r = (P.stages[i].weeks || "").split("-");
+    var a = parseInt(r[0], 10), z = parseInt(r[1], 10);
+    if (!isNaN(a) && !isNaN(z) && week >= a && week <= z) return i;
+  }
+  return P.stages.length - 1;
+}
+
+/* week/day from the start date */
+function startDate() {
+  if (!S.settings.start) return null;
+  var p = S.settings.start.split("-");
+  return new Date(+p[0], +p[1] - 1, +p[2]);
+}
+function todayPos() {
+  var sd = startDate();
+  if (!sd) return null;
+  var now = new Date(); now.setHours(0, 0, 0, 0);
+  var diff = Math.floor((now - sd) / 86400000);
+  if (diff < 0) return { w: 1, d: "mon", before: true };
+  var w = Math.floor(diff / 7) + 1;
+  if (w > 24) return { w: 24, d: "sun", after: true };
+  return { w: w, d: DAYS[diff % 7] };
+}
+function dateOf(week, dk) {
+  var sd = startDate(); if (!sd) return null;
+  var dd = new Date(sd.getTime());
+  dd.setDate(dd.getDate() + (week - 1) * 7 + DAYS.indexOf(dk));
+  return dd;
+}
+function isoDate(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+/* ---------------- parsing the program text ---------------- */
+
+var SETRE = /(\d+)\s*[x×]\s*(\d+)/;
+
+function classify(line) {
+  if (/^[A-Z][A-Z0-9-]{3,}(\s|$)/.test(line) && !SETRE.test(line)) return "head";
+  if (/^(cut |stop |log |zero |then |full rest|no lifting|no max|shooting \+|or full rest|movement only)/i.test(line)) return "note";
+  if (/\.$/.test(line) && !SETRE.test(line)) return "note";
+  return "ex";
+}
+function parseLine(line) {
+  var m = line.match(SETRE);
+  return { text: line, sets: m ? +m[1] : 1, reps: m ? m[2] : null, hasSets: !!m };
+}
+function libSets(s) {
+  var m = String(s).match(SETRE);
+  return m ? +m[1] : 1;
+}
+
+/* Build every session for one day of one week. */
+var sessCache = {};
+function sessionsFor(week) {
+  var st0 = strengthFor(week);
+  var ck = week + "|" + st0.sqKg + "|" + st0.tbKg;
+  if (sessCache[week] && sessCache[week].k === ck) return sessCache[week].v;
+  var v = buildSessions(week, st0);
+  sessCache[week] = { k: ck, v: v };
+  return v;
+}
+function buildSessions(week, st) {
+  var W = P.weeks[week - 1];
+  var deload = /DELOAD/i.test(W.load);
+  var lateBlock = week >= 17;
+
+  function loadTag(line) {
+    if (/back squat/i.test(line)) {
+      return { scheme: st.row.squat_scheme, kg: st.sqKg, pct: st.row.squat_pct };
+    }
+    if (/trap-bar deadlift/i.test(line)) {
+      return { scheme: st.row.tb_scheme, kg: st.tbKg, pct: st.row.tb_pct };
+    }
+    if (/front squat/i.test(line)) return { scheme: null, kg: st.fsKg, pct: null };
+    return null;
+  }
+  function items(lines, id) {
+    return lines.map(function (line, i) {
+      var kind = classify(line);
+      if (kind !== "ex") return { kind: kind, text: line };
+      var p = parseLine(line), tag = loadTag(line);
+      if (tag) {
+        if (tag.scheme) { p.sets = libSets(tag.scheme); p.reps = tag.scheme.split(/[x×]/)[1]; p.hasSets = true; }
+        p.kg = tag.kg; p.pct = tag.pct;
+        p.text = line.replace(/\s*\(Strength tab\)/i, "").replace(SETRE, tag.scheme || "$&");
+      }
+      p.kind = "ex"; p.key = id + ":" + i;
+      return p;
+    });
+  }
+  function upper(letter, id) {
+    var lib = P.upper[letter]; if (!lib) return null;
+    var cap = deload ? 2 : (lateBlock ? (letter === "B" ? 3 : 2) : 99);
+    return {
+      id: id,
+      title: "Upper " + letter + " · " + lib.title.split("(")[0].replace(/UPPER [ABC]\s*[—-]\s*/i, "").trim()
+        .toLowerCase().replace(/(^|[\s&])([a-z])/g, function (m, a, c) { return a + c.toUpperCase(); }),
+      meta: (lib.title.match(/~\s*\d+\s*min/) || [""])[0],
+      hi: 0,
+      items: lib.ex.map(function (e, i) {
+        var n = Math.min(libSets(e.sets), cap);
+        return {
+          kind: "ex", key: id + ":" + i, text: e.name, sets: n, hasSets: true,
+          reps: (String(e.sets).match(SETRE) || [])[2] || null,
+          detail: (n < libSets(e.sets) ? n + " x " + (String(e.sets).match(SETRE) || [0, 0, ""])[2] : e.sets) + "  ·  " + e.load
+        };
+      })
+    };
+  }
+
+  var out = { mon: [], tue: [], wed: [], thu: [], fri: [], sat: [], sun: [] };
+
+  out.mon.push({ id: "mon-lower", title: "Lower strength", meta: st.row.squat_scheme + " squat · " + Math.round(st.row.squat_pct * 100) + "%", hi: 0, items: items(W.mon_lower, "mon-lower") });
+  if (/Upper A/i.test(W.mon_upper)) out.mon.push(upper("A", "mon-upperA"));
+  else if (W.mon_upper) out.mon.push({ id: "mon-up", title: W.mon_upper.split("\n")[0], meta: "", hi: 0, items: items(W.mon_upper.split("\n"), "mon-up") });
+
+  out.tue.push({ id: "tue", title: "Jump + court", meta: "primary jump day", hi: W.tue_hi || 0, items: items(W.tue_jump, "tue") });
+
+  var wedRest = W.wed.filter(function (l) { return !/Upper B/i.test(l); });
+  if (W.wed.some(function (l) { return /Upper B/i.test(l); })) out.wed.push(upper("B", "wed-upperB"));
+  if (wedRest.length) out.wed.push({ id: "wed", title: "Core + mobility", meta: "zero lower impact", hi: 0, items: items(wedRest, "wed") });
+
+  out.thu.push({ id: "thu", title: "Explosive", meta: "nervous-system day", hi: W.thu_hi || 0, items: items(W.thu, "thu") });
+  out.fri.push({ id: "fri", title: "Rest", meta: "protected", hi: 0, items: items(W.fri, "fri") });
+
+  out.sat.push({ id: "sat-lower", title: /DUNK WINDOW|TEST/i.test(W.sat_lower.join(" ")) ? "Dunk window" : "Lower power", meta: st.row.tb_scheme + " trap-bar", hi: W.sat_hi || 0, items: items(W.sat_lower, "sat-lower") });
+  if (/Upper C/i.test(W.sat_upper)) out.sat.push(upper("C", "sat-upperC"));
+  else if (W.sat_upper) out.sat.push({ id: "sat-up", title: "Upper C", meta: "optional", hi: 0, items: items(W.sat_upper.split("\n").join(" ").replace(/\s+/g, " ").split("|"), "sat-up") });
+
+  out.sun.push({ id: "sun", title: "Basketball", meta: "75 min cap · no max jumping", hi: 0, items: items(W.sun, "sun") });
+
+  Object.keys(out).forEach(function (k) { out[k] = out[k].filter(Boolean); });
+  return out;
+}
+
+function plannedHI(week, dk) {
+  var W = P.weeks[week - 1];
+  if (dk === "tue") return W.tue_hi || 0;
+  if (dk === "thu") return W.thu_hi || 0;
+  if (dk === "sat") return W.sat_hi || 0;
+  return 0;
+}
+function weekHI(week) {
+  var tot = 0, any = false;
+  DAYS.forEach(function (dk) {
+    var d = wk(week).d[dk];
+    if (d && d.hi !== null && d.hi !== undefined) { tot += d.hi; any = true; }
+    else tot += plannedHI(week, dk);
+  });
+  return { total: tot, logged: any };
+}
+function loggedHI(week) {
+  var t = 0;
+  DAYS.forEach(function (dk) { var d = wk(week).d[dk]; if (d && d.hi != null) t += d.hi; });
+  return t;
+}
+function dayProgress(week, dk) {
+  var ss = sessionsFor(week)[dk], done = 0, tot = 0;
+  ss.forEach(function (s) {
+    s.items.forEach(function (it) {
+      if (it.kind !== "ex") return;
+      var n = it.hasSets ? it.sets : 1;
+      tot += n;
+      var arr = (wk(week).d[dk] && wk(week).d[dk].s[it.key]) || [];
+      for (var i = 0; i < n; i++) if (arr[i]) done++;
+    });
+  });
+  return { done: done, total: tot };
+}
+
+/* ---------------- tiny DOM helpers ---------------- */
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+function el(id) { return document.getElementById(id); }
+
+/* ---------------- rest timer ---------------- */
+
+var T = { end: 0, len: 0, tick: null, lock: null };
+function startTimer(sec) {
+  T.len = sec; T.end = Date.now() + sec * 1000;
+  if (!T.tick) T.tick = setInterval(paintTimer, 250);
+  requestWake();
+  paintTimer();
+}
+function stopTimer() {
+  T.end = 0; clearInterval(T.tick); T.tick = null; releaseWake(); paintTimer();
+}
+async function requestWake() {
+  try { if (navigator.wakeLock && !T.lock) T.lock = await navigator.wakeLock.request("screen"); } catch (e) {}
+}
+function releaseWake() { try { if (T.lock) { T.lock.release(); T.lock = null; } } catch (e) {} }
+function paintTimer() {
+  var host = el("timerHost");
+  if (!T.end) { host.innerHTML = ""; return; }
+  var left = Math.round((T.end - Date.now()) / 1000);
+  if (left <= -20) { stopTimer(); return; }
+  var over = left <= 0;
+  if (over && !T.buzzed) { T.buzzed = true; try { navigator.vibrate && navigator.vibrate([120, 80, 120]); } catch (e) {} }
+  if (!over) T.buzzed = false;
+  var v = Math.abs(left);
+  var txt = Math.floor(v / 60) + ":" + String(v % 60).padStart(2, "0");
+  host.innerHTML =
+    '<div class="timer ' + (over ? "done" : "run") + '">' +
+    '<small>' + (over ? "go" : "rest") + '</small>' +
+    '<span>' + txt + '</span>' +
+    '<button class="x" data-act="tstop" aria-label="Stop timer">&times;</button></div>';
+}
+
+/* ---------------- render: Today ---------------- */
+
+function ring(done, total) {
+  var f = total ? done / total : 0, r = 9, c = 2 * Math.PI * r;
+  var col = f >= 1 ? "var(--ok)" : (f > 0 ? "var(--accent)" : "var(--line)");
+  return '<span class="ringwrap"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">' +
+    '<circle cx="12" cy="12" r="' + r + '" fill="none" stroke="var(--line-soft)" stroke-width="3"></circle>' +
+    '<circle cx="12" cy="12" r="' + r + '" fill="none" stroke="' + col + '" stroke-width="3" stroke-linecap="round"' +
+    ' stroke-dasharray="' + (c * f).toFixed(1) + ' ' + c.toFixed(1) + '" transform="rotate(-90 12 12)"></circle>' +
+    "</svg></span>";
+}
+
+function itemHTML(week, dk, it) {
+  if (it.kind === "head") return '<div class="exhead">' + esc(it.text) + "</div>";
+  if (it.kind === "note") return '<div class="exnote"><i></i><span>' + esc(it.text) + "</span></div>";
+  var D = day(week, dk), arr = D.s[it.key] || [], ld = D.ld[it.key] || {};
+  var name = esc(it.text);
+  if (it.kg) name += ' <span class="load">' + fmtKg(it.kg) + " kg</span>";
+  var h = '<div class="ex"><div class="ex-top">';
+  if (!it.hasSets) {
+    h += '<button class="tick" data-act="set" data-k="' + it.key + '" data-i="0" aria-pressed="' + (arr[0] ? "true" : "false") + '">&#10003;</button>';
+  }
+  h += '<div class="ex-nm">' + name;
+  if (it.detail) h += '<div class="pre">' + esc(it.detail) + "</div>";
+  else if (it.pct) h += '<div class="pre">' + Math.round(it.pct * 100) + "% of est. 1RM</div>";
+  h += "</div></div>";
+  if (it.hasSets) {
+    h += '<div class="setrow">';
+    for (var i = 0; i < it.sets; i++) {
+      h += '<button class="setpill" data-act="set" data-k="' + it.key + '" data-i="' + i + '" data-on="' + (arr[i] ? 1 : 0) + '">' +
+        (it.reps ? esc(it.reps) : i + 1) + "</button>";
+    }
+    h += "</div>";
+    if (it.kg) {
+      h += '<div class="loadin"><span>actual</span>' +
+        '<input type="number" inputmode="decimal" step="2.5" data-act="ld" data-k="' + it.key + '" data-f="w" value="' + (ld.w != null ? ld.w : "") + '" placeholder="' + fmtKg(it.kg) + '" aria-label="Actual load in kg"><span>kg</span>' +
+        '<input type="number" inputmode="numeric" data-act="ld" data-k="' + it.key + '" data-f="r" value="' + (ld.r != null ? ld.r : "") + '" placeholder="' + (it.reps || "") + '" aria-label="Actual top-set reps"><span>reps top set</span></div>';
+    }
+  }
+  return h + "</div>";
+}
+
+function hiCardHTML(week, dk) {
+  var plan = plannedHI(week, dk), D = day(week, dk);
+  var val = D.hi != null ? D.hi : plan;
+  var W = P.weeks[week - 1], cap = W.cap || 0;
+  var tot = loggedHI(week);
+  var pct = cap ? Math.min(100, (tot / cap) * 100) : 0;
+  var overPct = cap && tot > cap ? Math.min(100, ((tot - cap) / cap) * 100) : 0;
+  return '<section class="blk"><span class="eyebrow">High-intensity contacts</span>' +
+    '<div class="panel"><div class="hi"><div class="hi-top">' +
+    '<button class="stepbtn" data-act="hi" data-v="-1" aria-label="One fewer contact">&minus;</button>' +
+    '<div class="hi-n">' + val + "</div>" +
+    '<button class="stepbtn" data-act="hi" data-v="1" aria-label="One more contact">+</button>' +
+    '<div class="hi-lab">' + (D.hi != null ? "logged today" : "planned today") + " · " + plan + " on the sheet<br>" +
+    "Approach jumps, depth &amp; box jumps, max CMJ, rim touches, dunk attempts.</div></div>" +
+    '<div class="bar"><i class="fill" style="width:' + pct.toFixed(1) + '%"></i><i class="over" style="width:' + overPct.toFixed(1) + '%"></i></div>' +
+    '<div class="barlab"><span>' + tot + " logged this week</span><span>cap " + cap + "</span></div>" +
+    "</div></div></section>";
+}
+
+function readyHTML(week, dk) {
+  var rd = day(week, dk).rd || {};
+  var h = '<section class="blk"><span class="eyebrow">Morning check</span><div class="panel ready">';
+  h += '<div class="row"><div class="lab">AM tendon stiffness<small>Achilles + patellar, first minute out of bed</small></div><div class="scale">';
+  for (var i = 1; i <= 5; i++) h += '<button class="' + (i >= 4 ? "hot" : "") + '" data-act="rd" data-f="st" data-v="' + i + '" aria-pressed="' + (rd.st === i ? "true" : "false") + '">' + i + "</button>";
+  h += "</div></div>";
+  h += '<div class="row"><div class="lab">Leg soreness</div><div class="scale s10">';
+  for (var j = 1; j <= 10; j++) h += '<button data-act="rd" data-f="so" data-v="' + j + '" aria-pressed="' + (rd.so === j ? "true" : "false") + '">' + j + "</button>";
+  h += "</div></div>";
+  h += '<div class="row"><div class="lab">Sleep</div><input class="numin" type="number" inputmode="decimal" step="0.5" data-act="rd" data-f="sl" value="' + (rd.sl != null ? rd.sl : "") + '" placeholder="h" aria-label="Hours slept"></div>';
+  return h + "</div></section>";
+}
+
+function viewToday() {
+  var week = S.ui.w, dk = S.ui.d, W = P.weeks[week - 1];
+  var ss = sessionsFor(week)[dk], D = day(week, dk);
+  var h = "";
+
+  var rd = D.rd || {};
+  if (rd.st >= 4) {
+    h += '<div class="alert crit"><b>Stiffness ' + rd.st + '.</b> If a 4 or 5 has persisted past 48 hours, the next jump session becomes a mobility session. Do not push through it.</div>';
+  }
+  if (/DELOAD/i.test(W.load)) {
+    h += '<div class="alert warn"><b>Deload week.</b> Loads drop to ' + Math.round(P.strength[week - 1].squat_pct * 100) + '%, jump volume roughly halves. This is a real down week, not a copy of last week.</div>';
+  }
+  if (WINDOWWK.indexOf(week) >= 0 && dk === "sat") {
+    h += '<div class="alert acc"><b>Dunk window.</b> Full 20 min warm-up, 3 minutes between attempts. Stop when two attempts in a row are clearly below your best of the day.</div>';
+  }
+
+  h += '<section class="blk"><span class="eyebrow">' + esc(DAYFULL[dk]) + " · " + esc(W.focus.split(".")[0]) + "</span></section>";
+
+  ss.forEach(function (s) {
+    h += '<div class="sess panel"><div class="sess-head"><span class="nm">' + esc(s.title) + "</span>" +
+      (s.meta ? '<span class="meta">' + esc(s.meta) + "</span>" : "") + "</div>";
+    s.items.forEach(function (it) { h += itemHTML(week, dk, it); });
+    h += "</div>";
+  });
+
+  if (plannedHI(week, dk) > 0 || D.hi != null) h += hiCardHTML(week, dk);
+
+  h += '<section class="blk"><span class="eyebrow">Rest timer</span><div class="panel"><div class="hi">' +
+    '<div style="display:flex;gap:8px">' +
+    '<button class="btn" data-act="timer" data-s="180">3:00</button>' +
+    '<button class="btn" data-act="timer" data-s="150">2:30</button>' +
+    '<button class="btn" data-act="timer" data-s="90">1:30</button>' +
+    "</div></div></div>" +
+    '<div class="sub">3:00 between max approach jumps and dunk attempts. It feels absurd and it is the difference between training your peak and training your fatigue.</div></section>';
+
+  h += readyHTML(week, dk);
+
+  h += '<section class="blk"><span class="eyebrow">Session notes</span>' +
+    '<textarea class="txtin" data-act="note" placeholder="How the jumps felt, bar speed, anything that hurt.">' + esc(D.note || "") + "</textarea></section>";
+
+  var pr = dayProgress(week, dk);
+  h += '<section class="blk"><button class="btn ' + (D.done ? "done" : "pri") + '" data-act="finish">' +
+    (D.done ? "Session complete ✓" : "Finish session · " + pr.done + "/" + pr.total) + "</button>" +
+    '<div class="sub">' + esc(W.focus) + "</div></section>";
+
+  return h;
+}
+
+/* ---------------- render: Week ---------------- */
+
+function viewWeek() {
+  var week = S.ui.pickW, W = P.weeks[week - 1], st = strengthFor(week);
+  var tp = todayPos();
+  var h = '<div class="wkpick" id="wkpick">';
+  for (var n = 1; n <= 24; n++) {
+    var dl = /DELOAD/i.test(P.weeks[n - 1].load);
+    h += '<button data-act="pickw" data-w="' + n + '" aria-current="' + (n === week ? "true" : "false") + '">' + n +
+      (WINDOWWK.indexOf(n) >= 0 ? '<u class="w"></u>' : (dl ? "<u></u>" : "")) + "</button>";
+  }
+  h += "</div>";
+
+  var hi = weekHI(week), cap = W.cap;
+  h += '<section class="blk"><div class="panel lift"><div class="hi">' +
+    '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">' +
+    '<span class="chip phase">' + esc(W.phase) + "</span>" +
+    '<span class="chip ' + (/DELOAD/i.test(W.load) ? "deload" : "build") + '">' + esc(W.load) + "</span>" +
+    (WINDOWWK.indexOf(week) >= 0 ? '<span class="chip window">dunk window</span>' : "") + "</div>" +
+    '<div style="margin-top:9px;font-size:13.5px;line-height:1.5">' + esc(W.focus) + "</div>" +
+    '<div class="bar"><i class="fill" style="width:' + Math.min(100, (hi.total / cap) * 100).toFixed(1) + '%"></i>' +
+    (hi.total > cap ? '<i class="over" style="width:' + Math.min(100, ((hi.total - cap) / cap) * 100).toFixed(1) + '%"></i>' : "") + "</div>" +
+    '<div class="barlab"><span>' + hi.total + " HI contacts " + (hi.logged ? "(part logged)" : "(planned)") + "</span><span>cap " + cap + "</span></div>" +
+    "</div></div></section>";
+
+  h += '<section class="blk"><span class="eyebrow">Days</span><div class="panel daylist">';
+  DAYS.forEach(function (dk) {
+    var pr = dayProgress(week, dk), ss = sessionsFor(week)[dk];
+    var titles = ss.map(function (s) { return s.title; }).join(" + ");
+    var d = dateOf(week, dk);
+    var isToday = tp && tp.w === week && tp.d === dk;
+    var hip = plannedHI(week, dk);
+    h += '<button class="d' + (isToday ? " today" : "") + '" data-act="goday" data-w="' + week + '" data-d="' + dk + '">' +
+      ring(pr.done, pr.total) +
+      '<span class="dn">' + DAYNM[dk] + "</span>" +
+      '<span class="dt">' + esc(titles) + "<s>" + (d ? isoDate(d) + " · " : "") + (hip ? hip + " HI" : "no HI") + "</s></span>" +
+      "</button>";
+  });
+  h += "</div></section>";
+
+  h += '<section class="blk"><span class="eyebrow">Loads this week</span><div class="panel kv">' +
+    "<div>Back squat</div><div>" + esc(st.row.squat_scheme) + " @ " + (st.sqKg ? fmtKg(st.sqKg) + " kg" : "—") + "</div>" +
+    "<div>Trap-bar deadlift</div><div>" + esc(st.row.tb_scheme) + " @ " + (st.tbKg ? fmtKg(st.tbKg) + " kg" : "—") + "</div>" +
+    "<div>Front squat</div><div>3x6 @ " + (st.fsKg ? fmtKg(st.fsKg) + " kg" : "—") + "</div>" +
+    "<div>Squat intensity</div><div>" + Math.round(st.row.squat_pct * 100) + "% of " + (st.sq1 ? fmtKg(st.sq1) + " kg" : "—") + "</div>" +
+    "</div><div class=\"sub\">" + esc(st.row.notes) + "</div></section>";
+
+  return h;
+}
+
+/* ---------------- render: Progress ---------------- */
+
+function rulerSVG() {
+  var reach = +S.settings.reach, rim = +S.settings.rim, dunk = +S.settings.dunkTouch;
+  var bt = bestTouch();
+  var lo = Math.min(reach, 295) - 4, hi = Math.max(dunk, rim, bt.v || 0) + 6;
+  var H = 210, W = 150, top = 12, bot = H - 12;
+  function y(cm) { return bot - ((cm - lo) / (hi - lo)) * (bot - top); }
+  var marks = [
+    { cm: dunk, lab: "dunk", col: "var(--ink)", w: 2 },
+    { cm: rim, lab: "rim", col: "var(--muted)", w: 1 }
+  ];
+  var tgt = targetAt(S.ui.pickW);
+  marks.push({ cm: tgt, lab: "wk " + S.ui.pickW + " target", col: "var(--faint)", w: 1, dash: "3 3" });
+  if (bt.v) marks.push({ cm: bt.v, lab: "best " + bt.v, col: "var(--accent)", w: 2.5 });
+  marks.push({ cm: reach, lab: "reach", col: "var(--muted)", w: 1 });
+
+  var s = '<svg viewBox="0 0 ' + W + " " + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="Touch height scale from standing reach to dunk clearance">';
+  s += '<rect x="10" y="' + top + '" width="9" height="' + (bot - top) + '" fill="var(--line-soft)" rx="2"></rect>';
+  if (bt.v) {
+    s += '<rect x="10" y="' + y(bt.v).toFixed(1) + '" width="9" height="' + (bot - y(bt.v)).toFixed(1) + '" fill="var(--accent)" opacity="0.22" rx="2"></rect>';
+  }
+  /* place the tick at its true height, then push labels apart so none collide */
+  marks.forEach(function (m) { m.y = y(m.cm); });
+  var ordered = marks.slice().sort(function (a, b) { return a.y - b.y; });
+  ordered.forEach(function (m) { m.ly = m.y; });
+  for (var k = 1; k < ordered.length; k++) {
+    if (ordered[k].ly - ordered[k - 1].ly < 11) ordered[k].ly = ordered[k - 1].ly + 11;
+  }
+  var spill = ordered.length ? ordered[ordered.length - 1].ly - (bot + 4) : 0;
+  if (spill > 0) ordered.forEach(function (m) { m.ly -= spill; });
+
+  marks.forEach(function (m) {
+    var yy = m.y.toFixed(1);
+    s += '<line x1="6" y1="' + yy + '" x2="23" y2="' + yy + '" stroke="' + m.col + '" stroke-width="' + m.w + '"' + (m.dash ? ' stroke-dasharray="' + m.dash + '"' : "") + "></line>";
+    if (Math.abs(m.ly - m.y) > 1.5) {
+      s += '<line x1="23" y1="' + yy + '" x2="27" y2="' + m.ly.toFixed(1) + '" stroke="' + m.col + '" stroke-width="0.75" opacity="0.6"></line>';
+    }
+    s += '<text x="29" y="' + (m.ly + 3.4).toFixed(1) + '" fill="' + m.col + '" font-family="IBM Plex Mono, monospace" font-size="9.5">' +
+      Math.round(m.cm) + " · " + m.lab + "</text>";
+  });
+  return s + "</svg>";
+}
+
+function chartSVG() {
+  var W = 340, H = 172, L = 30, R = 8, TP = 10, B = 22;
+  var pts = [];
+  for (var n = 1; n <= 24; n++) {
+    var l = S.weeks[n] && S.weeks[n].log;
+    if (l && l.app) pts.push({ w: n, v: +l.app });
+  }
+  var vals = P.targets.map(function (t) { return t.touch; }).concat(pts.map(function (p) { return p.v; }));
+  var lo = Math.min.apply(null, vals) - 3, hi = Math.max.apply(null, vals) + 3;
+  function x(w) { return L + ((w - 0) / 24) * (W - L - R); }
+  function y(v) { return TP + (1 - (v - lo) / (hi - lo)) * (H - TP - B); }
+
+  var s = '<svg viewBox="0 0 ' + W + " " + H + '" width="100%" role="img" aria-label="Best approach touch by week against the target ladder">';
+  var gy = [lo, (lo + hi) / 2, hi].map(function (v) { return Math.round(v); });
+  gy.forEach(function (v) {
+    s += '<line x1="' + L + '" y1="' + y(v).toFixed(1) + '" x2="' + (W - R) + '" y2="' + y(v).toFixed(1) + '" stroke="var(--line-soft)" stroke-width="1"></line>';
+    s += '<text x="' + (L - 5) + '" y="' + (y(v) + 3.2).toFixed(1) + '" text-anchor="end" fill="var(--faint)" font-family="IBM Plex Mono, monospace" font-size="9">' + v + "</text>";
+  });
+  var tp = P.targets.map(function (t) { return x(t.w).toFixed(1) + "," + y(t.touch).toFixed(1); }).join(" ");
+  s += '<polyline points="' + tp + '" fill="none" stroke="var(--faint)" stroke-width="1.5" stroke-dasharray="4 3"></polyline>';
+  if (pts.length) {
+    if (pts.length > 1) {
+      s += '<polyline points="' + pts.map(function (p) { return x(p.w).toFixed(1) + "," + y(p.v).toFixed(1); }).join(" ") +
+        '" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"></polyline>';
+    }
+    pts.forEach(function (p, i) {
+      var last = i === pts.length - 1;
+      s += '<circle cx="' + x(p.w).toFixed(1) + '" cy="' + y(p.v).toFixed(1) + '" r="' + (last ? 4.5 : 3) + '" fill="var(--accent)"></circle>';
+      if (last) s += '<text x="' + Math.min(W - R - 2, x(p.w) + 8).toFixed(1) + '" y="' + (y(p.v) - 7).toFixed(1) + '" fill="var(--accent)" font-family="IBM Plex Mono, monospace" font-size="10" font-weight="600" text-anchor="' + (x(p.w) > W - 60 ? "end" : "start") + '">' + p.v + "</text>";
+    });
+  }
+  [0, 4, 8, 12, 16, 20, 24].forEach(function (w) {
+    s += '<text x="' + x(w).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="middle" fill="var(--faint)" font-family="IBM Plex Mono, monospace" font-size="9">' + w + "</text>";
+  });
+  return s + "</svg>";
+}
+
+function viewProg() {
+  var week = S.ui.pickW, bt = bestTouch();
+  var reach = +S.settings.reach, dunk = +S.settings.dunkTouch;
+  var gap = bt.v ? dunk - bt.v : null;
+  var vert = bt.v ? bt.v - reach : null;
+  var base = P.targets[0].touch;
+
+  var h = '<section class="blk"><span class="eyebrow">Where you are</span>' +
+    '<div class="panel lift"><div class="ruler">' + rulerSVG() +
+    '<div class="gapnum">' +
+    '<div class="big acc">' + (gap != null ? gap : "—") + '<small>cm to a dunk</small></div>' +
+    '<div class="big">' + (vert != null ? vert : "—") + '<small>approach vertical</small></div>' +
+    "</div></div>" +
+    '<div class="stat3" style="border-top:1px solid var(--line-soft)">' +
+    '<div><div class="v">' + (bt.v || "—") + '</div><div class="k">best touch</div></div>' +
+    '<div><div class="v">' + (bt.v ? (bt.v - base >= 0 ? "+" : "") + (bt.v - base) : "—") + '</div><div class="k">vs week 0</div></div>' +
+    '<div><div class="v">' + Math.round(targetAt(week)) + '</div><div class="k">wk ' + week + " target</div></div>" +
+    "</div></div></section>";
+
+  h += '<section class="blk"><span class="eyebrow">Approach touch vs target ladder</span>' +
+    '<div class="panel" style="padding:10px 8px 4px">' + chartSVG() + "</div>" +
+    '<div class="sub">Dashed line is the plan. Log a full test on weeks 4, 8, 12, 16, 20 and 24 only — testing max touch weekly is itself a training stress.</div></section>';
+
+  var L = wk(week).log || {};
+  var isTest = TESTWK.indexOf(week) >= 0;
+  h += '<section class="blk"><span class="eyebrow">Log week ' + week + (isTest ? " · full test week" : "") + "</span>" +
+    '<div class="panel logform">' +
+    '<label for="lgR">Standing reach</label><div><input id="lgR" class="numin" type="number" inputmode="decimal" data-act="log" data-f="reach" value="' + (L.reach != null ? L.reach : "") + '" placeholder="' + reach + '"><span class="note">cm</span></div>' +
+    '<label for="lgC">Best CMJ touch</label><div><input id="lgC" class="numin" type="number" inputmode="decimal" data-act="log" data-f="cmj" value="' + (L.cmj != null ? L.cmj : "") + '"><span class="note">cm</span></div>' +
+    '<label for="lgA">Best approach touch</label><div><input id="lgA" class="numin" type="number" inputmode="decimal" data-act="log" data-f="app" value="' + (L.app != null ? L.app : "") + '"><span class="note">cm</span></div>' +
+    "</div>" +
+    (L.app ? '<div class="sub">Approach vertical ' + (L.app - reach) + " cm · " + (dunk - L.app) + " cm short of a regulation dunk.</div>" : "") +
+    "</section>";
+
+  var stg = currentStage(week);
+  h += '<section class="blk"><span class="eyebrow">Dunk progression</span><div class="panel">';
+  P.stages.forEach(function (s, i) {
+    var reached = L.stage != null ? i <= L.stage - 1 : false;
+    var cls = (L.stage != null && i === L.stage - 1) ? "on" : (reached ? "past" : (i === stg && L.stage == null ? "on" : ""));
+    h += '<button class="stagerow ' + cls + '" data-act="stage" data-s="' + (i + 1) + '">' +
+      '<span class="sn">' + esc(s.stage) + "</span><span class=\"sb\">" +
+      '<span class="st">' + esc(s.goal) + "</span>" +
+      '<span class="sm">' + esc(s.moveOn) + "</span>" +
+      '<span class="sw">weeks ' + esc(s.weeks) + " · needs " + esc(s.touch) + " cm touch · " + esc(s.attempts) + " attempts</span>" +
+      "</span></button>";
+  });
+  h += '</div><div class="sub">Tap the stage you actually reached this week. Stalling: ' + esc(P.stages[stg].stall) + "</div></section>";
+
+  var sq = oneRM("sq", week), tb = oneRM("tb", week);
+  var ratio = sq ? sq / +S.settings.bw : null;
+  h += '<section class="blk"><span class="eyebrow">Strength</span><div class="panel kv">' +
+    "<div>Est. squat 1RM</div><div>" + (sq ? fmtKg(sq) + " kg" : "—") + "</div>" +
+    "<div>Est. trap-bar 1RM</div><div>" + (tb ? fmtKg(tb) + " kg" : "—") + "</div>" +
+    "<div>Squat : bodyweight</div><div>" + (ratio ? ratio.toFixed(2) + "x" : "—") + "</div>" +
+    "<div>Target by week 20</div><div>1.60x · " + fmtKg(r25(1.6 * S.settings.bw)) + " kg</div>" +
+    "</div>" +
+    '<div class="sub">Retest with a 3–5 rep max on weeks 9 and 17 and enter it in settings — every prescribed load recalculates. Never 1RM test.</div></section>';
+
+  h += '<section class="blk"><span class="eyebrow">Jump log</span><div class="panel scrollx"><table class="data">' +
+    "<thead><tr><th>Wk</th><th>CMJ</th><th>App.</th><th>Vert</th><th>Gap</th><th>Stiff</th><th>Sleep</th><th>HI</th></tr></thead><tbody>";
+  var tp = todayPos();
+  for (var n = 1; n <= 24; n++) {
+    var lg = (S.weeks[n] && S.weeks[n].log) || {};
+    var st = [], sl = [];
+    DAYS.forEach(function (dk) {
+      var dd = S.weeks[n] && S.weeks[n].d && S.weeks[n].d[dk];
+      if (dd && dd.rd) { if (dd.rd.st) st.push(dd.rd.st); if (dd.rd.sl) sl.push(+dd.rd.sl); }
+    });
+    function avg(a) { return a.length ? (a.reduce(function (x, y) { return x + y; }, 0) / a.length) : null; }
+    var av = avg(st), asl = avg(sl), lh = loggedHI(n);
+    var r = (lg.reach || reach);
+    h += '<tr class="' + (TESTWK.indexOf(n) >= 0 ? "test " : "") + (tp && tp.w === n ? "now" : "") + '">' +
+      "<td>" + n + "</td>" +
+      "<td" + (lg.cmj ? "" : ' class="empty"') + ">" + (lg.cmj || "–") + "</td>" +
+      "<td" + (lg.app ? "" : ' class="empty"') + ">" + (lg.app || "–") + "</td>" +
+      "<td" + (lg.app ? "" : ' class="empty"') + ">" + (lg.app ? lg.app - r : "–") + "</td>" +
+      "<td" + (lg.app ? "" : ' class="empty"') + ">" + (lg.app ? dunk - lg.app : "–") + "</td>" +
+      "<td" + (av ? "" : ' class="empty"') + ">" + (av ? av.toFixed(1) : "–") + "</td>" +
+      "<td" + (asl ? "" : ' class="empty"') + ">" + (asl ? asl.toFixed(1) : "–") + "</td>" +
+      "<td" + (lh ? "" : ' class="empty"') + ">" + (lh || "–") + "</td></tr>";
+  }
+  h += "</tbody></table></div></section>";
+  return h;
+}
+
+/* ---------------- render: Guide ---------------- */
+
+function viewGuide() {
+  var h = '<section class="blk"><span class="eyebrow">Phase map</span><div class="panel">';
+  P.phases.forEach(function (p, i) {
+    var here = S.ui.w >= +p.weeks.split("-")[0] && S.ui.w <= +p.weeks.split("-")[1];
+    h += '<div class="ex"' + (here ? ' style="box-shadow:inset 3px 0 0 var(--accent)"' : "") + ">" +
+      '<div class="ex-top"><div class="ex-nm"><b>' + esc(p.phase) + "</b> " +
+      '<span class="pre" style="display:inline">weeks ' + esc(p.weeks) + "</span>" +
+      '<div class="pre">' + esc(p.objective) + "</div>" +
+      '<div class="pre">squat ' + esc(p.squat) + " · " + esc(p.jump).toLowerCase() + " · cap " + esc(p.cap) + "/wk</div>" +
+      "</div></div></div>";
+  });
+  h += "</div></section>";
+
+  h += '<section class="blk"><span class="eyebrow">Drill library · contact cost</span><div class="panel">';
+  P.drills.forEach(function (d) {
+    h += "<details class=\"acc\"><summary><span class=\"badge " + (d.intensity === "HI" ? "hi" : "li") + '">' + d.intensity + "</span>" + esc(d.name) +
+      '<span class="pre" style="color:var(--faint);font-family:\'IBM Plex Mono\',monospace;font-size:11.5px;margin-left:4px">' + esc(d.contacts) + "/set</span></summary>" +
+      '<div class="body"><p>' + esc(d.how) + "</p><p style=\"color:var(--crit)\"><b>Fails when</b> " + esc(d.fails) + "</p>" +
+      '<p style="color:var(--faint);font-size:12.5px">First used ' + esc(d.first) + "</p></div></details>";
+  });
+  h += "</div><div class=\"sub\">If you substitute a drill, match the HI count, not the exercise name.</div></section>";
+
+  ["A", "B", "C"].forEach(function (k) {
+    var lib = P.upper[k]; if (!lib) return;
+    var t = lib.title.replace(/UPPER [ABC]\s*[—-]\s*/i, "");
+    h += '<section class="blk"><span class="eyebrow">Upper ' + k + " · " + esc(t.split("(")[0].trim()) + '</span><div class="panel exlist">';
+    lib.ex.forEach(function (e) {
+      h += '<div class="r"><span class="n">' + esc(e.name) + "<em>" + esc(e.purpose) + '</em></span><span class="s">' + esc(e.sets) + '</span><span class="l">' + esc(e.load) + "</span></div>";
+    });
+    h += "</div>" + (lib.title.indexOf("(") > 0 ? '<div class="sub">' + esc(lib.title.slice(lib.title.indexOf("(") + 1).replace(")", "")) + "</div>" : "") + "</section>";
+  });
+
+  h += '<section class="blk"><span class="eyebrow">Rules &amp; recovery</span><div class="panel">';
+  P.rules.forEach(function (r) {
+    h += '<details class="acc"><summary>' + esc(r.title) + '</summary><div class="body"><p>' + esc(r.text) + "</p></div></details>";
+  });
+  h += "</div></section>";
+
+  h += '<section class="blk"><span class="eyebrow">Program principles</span><div class="panel">';
+  P.principles.forEach(function (p) {
+    h += '<div class="ex"><div class="ex-nm"><b>' + esc(p.t) + '</b><div class="pre" style="white-space:normal;font-family:inherit;font-size:13px;margin-top:3px">' + esc(p.d) + "</div></div></div>";
+  });
+  h += "</div></section>";
+  return h;
+}
+
+/* ---------------- settings sheet ---------------- */
+
+function openSheet() {
+  var s = S.settings;
+  var tp = todayPos();
+  function testRow(kind, i, label) {
+    var t = (s[kind] && s[kind][i]) || {};
+    return '<label>' + label + "</label><div>" +
+      '<input class="numin" type="number" inputmode="decimal" data-act="test" data-k="' + kind + '" data-i="' + i + '" data-f="kg" value="' + (t.kg != null ? t.kg : "") + '" placeholder="kg" aria-label="' + label + ' weight"><span class="note">kg &times;</span>' +
+      '<input class="numin" style="width:48px" type="number" inputmode="numeric" data-act="test" data-k="' + kind + '" data-i="' + i + '" data-f="reps" value="' + (t.reps != null ? t.reps : "") + '" placeholder="reps" aria-label="' + label + ' reps"></div>';
+  }
+  el("sheetIn").innerHTML =
+    '<h2 class="disp" style="font-family:\'Barlow Condensed\',sans-serif;font-size:24px;margin:4px 0 12px">Setup</h2>' +
+    '<section class="blk" style="margin-top:0"><span class="eyebrow">Measurements</span><div class="panel logform">' +
+    '<label for="sBW">Bodyweight</label><div><input id="sBW" class="numin" type="number" inputmode="decimal" data-act="cfg" data-f="bw" value="' + s.bw + '"><span class="note">kg</span></div>' +
+    '<label for="sRE">Standing reach</label><div><input id="sRE" class="numin" type="number" inputmode="decimal" data-act="cfg" data-f="reach" value="' + s.reach + '"><span class="note">cm</span></div>' +
+    '<label for="sRI">Rim height</label><div><input id="sRI" class="numin" type="number" inputmode="decimal" data-act="cfg" data-f="rim" value="' + s.rim + '"><span class="note">cm</span></div>' +
+    '<label for="sDT">Touch needed to dunk</label><div><input id="sDT" class="numin" type="number" inputmode="decimal" data-act="cfg" data-f="dunkTouch" value="' + s.dunkTouch + '"><span class="note">cm</span></div>' +
+    "</div></section>" +
+    '<section class="blk"><span class="eyebrow">Strength tests · 3–5 rep max, never a 1RM</span><div class="panel logform">' +
+    testRow("sq", 0, "Squat · week 1") + testRow("sq", 1, "Squat · week 9") + testRow("sq", 2, "Squat · week 17") +
+    testRow("tb", 0, "Trap-bar · week 1") + testRow("tb", 1, "Trap-bar · week 9") + testRow("tb", 2, "Trap-bar · week 17") +
+    '</div><div class="sub">Every prescribed load is a live percentage of the most recent test on or before that week.</div></section>' +
+    '<section class="blk"><span class="eyebrow">Schedule</span><div class="panel logform">' +
+    '<label for="sSD">Week 1 Monday</label><div><input id="sSD" type="date" class="numin" style="width:auto" data-act="cfg" data-f="start" value="' + (s.start || "") + '"></div>' +
+    "</div>" +
+    '<div class="sub">' + (tp ? (tp.before ? "Program starts in the future." : tp.after ? "Program complete." : "Today is week " + tp.w + ", " + DAYFULL[tp.d] + ".") : "Set this and the app opens on the right day every time.") + "</div></section>" +
+    '<section class="blk"><span class="eyebrow">Appearance</span><div class="panel logform">' +
+    '<label for="sTH">Theme</label><div><select id="sTH" class="numin" style="width:auto;text-align:left" data-act="cfg" data-f="theme">' +
+    ["auto", "light", "dark"].map(function (t) { return '<option value="' + t + '"' + (s.theme === t ? " selected" : "") + ">" + t + "</option>"; }).join("") +
+    "</select></div></div>" +
+    '<div class="syncline"><span class="syncdot' + (db ? " on" : "") + '"></span>' + (db ? "Synced to your account" : "Saved on this device") + "</div></section>" +
+    '<section class="blk"><span class="eyebrow">Backup</span><div style="display:flex;gap:8px">' +
+    '<button class="btn" data-act="export">Export</button>' +
+    '<label class="btn" style="cursor:pointer">Import<input type="file" accept="application/json,.json" data-act="import" style="position:absolute;width:1px;height:1px;opacity:0"></label>' +
+    "</div>" +
+    '<div class="sub">Export writes a JSON file of every session, load and jump test. Import it into another copy of the app to move your log across.</div></section>' +
+    '<section class="blk"><button class="btn pri" data-act="closeSheet">Done</button></section>';
+  el("sheet").dataset.open = "1";
+}
+function closeSheet() { el("sheet").dataset.open = "0"; render(); }
+
+/* ---------------- shell ---------------- */
+
+function applyTheme() {
+  var t = S.settings.theme;
+  if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+  else document.documentElement.removeAttribute("data-theme");
+}
+
+function paintHeader() {
+  var week = S.ui.tab === "today" ? S.ui.w : S.ui.pickW;
+  var W = P.weeks[week - 1];
+  el("hWk").textContent = "Week " + week;
+  el("hDy").textContent = S.ui.tab === "today" ? DAYNM[S.ui.d] : W.phase.replace(/^\d+\s*/, "");
+  var c = "";
+  if (S.ui.tab === "today") {
+    c += '<span class="chip ' + (/DELOAD/i.test(W.load) ? "deload" : "build") + '">' + esc(W.load) + "</span>";
+    if (WINDOWWK.indexOf(week) >= 0 && S.ui.d === "sat") c += '<span class="chip window">window</span>';
+  }
+  el("hChips").innerHTML = c;
+  el("prevd").style.visibility = S.ui.tab === "today" ? "visible" : "hidden";
+  el("nextd").style.visibility = S.ui.tab === "today" ? "visible" : "hidden";
+}
+
+function render() {
+  applyTheme();
+  paintHeader();
+  var v = el("view"), y = window.scrollY;
+  v.innerHTML = S.ui.tab === "today" ? viewToday()
+    : S.ui.tab === "week" ? viewWeek()
+      : S.ui.tab === "prog" ? viewProg() : viewGuide();
+  Array.prototype.forEach.call(document.querySelectorAll("#tabs .tab"), function (b) {
+    b.setAttribute("aria-selected", b.dataset.tab === S.ui.tab ? "true" : "false");
+  });
+  window.scrollTo(0, Math.min(y, document.body.scrollHeight));
+  if (S.ui.tab === "week") {
+    var pk = el("wkpick"), cur = pk && pk.querySelector('[aria-current="true"]');
+    if (cur) pk.scrollLeft = Math.max(0, cur.offsetLeft - pk.clientWidth / 2 + 19);
+  }
+  paintTimer();
+}
+
+function stepDay(dir) {
+  var i = DAYS.indexOf(S.ui.d) + dir;
+  if (i < 0) { if (S.ui.w > 1) { S.ui.w--; S.ui.d = DAYS[6]; } }
+  else if (i > 6) { if (S.ui.w < 24) { S.ui.w++; S.ui.d = DAYS[0]; } }
+  else S.ui.d = DAYS[i];
+  S.ui.pickW = S.ui.w;
+  saveLocal(); render();
+}
+
+document.addEventListener("click", function (ev) {
+  var b = ev.target.closest("button, [data-close]");
+  if (!b) return;
+  var act = b.dataset.act;
+
+  if (b.dataset.close) { closeSheet(); return; }
+  if (b.id === "prevd") return stepDay(-1);
+  if (b.id === "nextd") return stepDay(1);
+  if (b.id === "btnSet") return openSheet();
+  if (b.id === "btnToday") {
+    var tp = todayPos();
+    if (!tp) return openSheet();
+    S.ui.w = tp.w; S.ui.d = tp.d; S.ui.pickW = tp.w; S.ui.tab = "today";
+    saveLocal(); return render();
+  }
+  if (b.classList.contains("tab")) {
+    S.ui.tab = b.dataset.tab;
+    if (S.ui.tab !== "today") S.ui.pickW = S.ui.pickW || S.ui.w;
+    saveLocal(); return render();
+  }
+
+  switch (act) {
+    case "set": {
+      var D = day(S.ui.w, S.ui.d), k = b.dataset.k, i = +b.dataset.i;
+      var arr = D.s[k] || (D.s[k] = []);
+      arr[i] = !arr[i];
+      if (b.classList.contains("setpill")) b.dataset.on = arr[i] ? 1 : 0;
+      else b.setAttribute("aria-pressed", arr[i] ? "true" : "false");
+      touchWeek(S.ui.w);
+      break;
+    }
+    case "hi": {
+      var Dh = day(S.ui.w, S.ui.d);
+      var cur = Dh.hi != null ? Dh.hi : plannedHI(S.ui.w, S.ui.d);
+      Dh.hi = Math.max(0, cur + +b.dataset.v);
+      touchWeek(S.ui.w); render();
+      break;
+    }
+    case "rd": {
+      var Dr = day(S.ui.w, S.ui.d);
+      Dr.rd = Dr.rd || {};
+      var f = b.dataset.f, v = +b.dataset.v;
+      Dr.rd[f] = Dr.rd[f] === v ? null : v;
+      touchWeek(S.ui.w); render();
+      break;
+    }
+    case "timer": startTimer(+b.dataset.s); break;
+    case "tstop": stopTimer(); break;
+    case "finish": {
+      var Df = day(S.ui.w, S.ui.d);
+      Df.done = !Df.done;
+      if (Df.done && Df.hi == null) Df.hi = plannedHI(S.ui.w, S.ui.d);
+      touchWeek(S.ui.w); render();
+      break;
+    }
+    case "pickw": S.ui.pickW = +b.dataset.w; saveLocal(); render(); break;
+    case "goday": S.ui.w = +b.dataset.w; S.ui.d = b.dataset.d; S.ui.tab = "today"; saveLocal(); render(); break;
+    case "stage": {
+      var L = wk(S.ui.pickW); L.log = L.log || {};
+      var sv = +b.dataset.s;
+      L.log.stage = L.log.stage === sv ? null : sv;
+      touchWeek(S.ui.pickW); render();
+      break;
+    }
+    case "export": exportData(); break;
+    case "closeSheet": closeSheet(); break;
+  }
+});
+
+document.addEventListener("change", function (ev) {
+  var t = ev.target, act = t.dataset && t.dataset.act;
+  if (!act) return;
+  if (act === "import") { if (t.files && t.files[0]) importData(t.files[0]); return; }
+  var val = t.value === "" ? null : (t.type === "number" ? +t.value : t.value);
+
+  if (act === "ld") {
+    var D = day(S.ui.w, S.ui.d);
+    D.ld[t.dataset.k] = D.ld[t.dataset.k] || {};
+    D.ld[t.dataset.k][t.dataset.f] = val;
+    touchWeek(S.ui.w);
+  } else if (act === "rd") {
+    var Dr = day(S.ui.w, S.ui.d); Dr.rd = Dr.rd || {}; Dr.rd.sl = val;
+    touchWeek(S.ui.w);
+  } else if (act === "log") {
+    var L = wk(S.ui.pickW); L.log = L.log || {};
+    L.log[t.dataset.f] = val;
+    L.log.date = isoDate(new Date());
+    touchWeek(S.ui.pickW); render();
+  } else if (act === "cfg") {
+    S.settings[t.dataset.f] = val;
+    S.settings.updatedAt = Date.now();
+    pushSettings(); applyTheme();
+    if (t.dataset.f === "start") openSheet();
+  } else if (act === "test") {
+    var k = t.dataset.k, i = +t.dataset.i;
+    S.settings[k] = S.settings[k] || [];
+    S.settings[k][i] = S.settings[k][i] || { w: [1, 9, 17][i] };
+    S.settings[k][i].w = [1, 9, 17][i];
+    S.settings[k][i][t.dataset.f] = val;
+    S.settings.updatedAt = Date.now();
+    pushSettings();
+  }
+});
+
+var noteTimer;
+document.addEventListener("input", function (ev) {
+  var t = ev.target;
+  if (!t.dataset || t.dataset.act !== "note") return;
+  day(S.ui.w, S.ui.d).note = t.value;
+  clearTimeout(noteTimer);
+  noteTimer = setTimeout(function () { touchWeek(S.ui.w); }, 500);
+});
+
+/* ---------------- boot ---------------- */
+
+loadLocal();
+if (!S.settings.start) {
+  var d = new Date(); d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  S.settings.start = isoDate(d);
+  saveLocal();
+}
+var pos = todayPos();
+if (pos && !pos.before && !pos.after) { S.ui.w = pos.w; S.ui.d = pos.d; }
+S.ui.pickW = S.ui.pickW || S.ui.w;
+render();
+connect();
+
+})();
+
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () { /* offline install unavailable */ });
+  });
+}
+</script>
+</body>
+</html>
