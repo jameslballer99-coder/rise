@@ -301,14 +301,14 @@ details.acc .body p:last-child{margin-bottom:0}
 
 /* ---------- launch: completes the system splash rather than replacing it ---------- */
 #splash{position:fixed;inset:0;z-index:200;background:#15120E;
-  display:grid;place-items:center;--m:min(52vw,214px);
+  display:grid;place-items:center;--m:min(64vw,270px);
   opacity:0;animation:splashin .2s ease forwards}
 #splash[data-off="1"]{opacity:0;transition:opacity .32s ease;pointer-events:none;animation:none}
 #splash svg{width:var(--m);height:var(--m);display:block}
 #splash .word{position:absolute;left:0;right:0;text-align:center;
   top:calc(50% + var(--m) / 2 + 20px);
   font-family:"Anton","Barlow Condensed",sans-serif;font-weight:400;
-  font-size:min(13vw,56px);line-height:1;letter-spacing:.13em;text-indent:.13em;
+  font-size:min(14vw,60px);line-height:1;letter-spacing:.13em;text-indent:.13em;
   color:#EFE9E0;text-transform:uppercase;
   opacity:0;animation:wordin .34s ease .16s forwards}
 @keyframes splashin{to{opacity:1}}
