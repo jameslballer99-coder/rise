@@ -15,6 +15,18 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-startup-image" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="launch-320x568@2x.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="launch-375x667@2x.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="launch-414x736@3x.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="launch-375x812@3x.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="launch-414x896@2x.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="launch-414x896@3x.png">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="launch-390x844@3x.png">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="launch-428x926@3x.png">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="launch-393x852@3x.png">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="launch-430x932@3x.png">
+<link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="launch-402x874@3x.png">
+<link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="launch-440x956@3x.png">
 <style>
   html{color-scheme:light dark}
   body{margin:0;font-size:14px}
@@ -299,16 +311,11 @@ details.acc .body p:last-child{margin-bottom:0}
   letter-spacing:.03em;color:var(--ink-2);white-space:nowrap}
 .liftpick button[aria-current="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
 
-/* ---------- launch screen ---------- */
-#splash{position:fixed;inset:0;z-index:200;background:#15120E;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;
-  opacity:1;transition:opacity .38s ease}
-#splash[data-off="1"]{opacity:0;pointer-events:none}
-#splash svg{width:min(38vw,170px);height:auto;display:block}
-#splash .word{font-family:"Anton","Barlow Condensed",sans-serif;font-weight:400;
-  font-size:min(17vw,74px);line-height:1;letter-spacing:.13em;text-indent:.13em;
-  color:#EFE9E0;text-transform:uppercase}
-@media (prefers-reduced-motion:reduce){#splash{transition:none}}
+/* ---------- three-minute rest ---------- */
+.rest3{color:var(--accent)}
+.rest3 b{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
+  border:1px solid var(--accent);border-radius:4px;padding:1px 4px;margin-left:5px;
+  white-space:nowrap;letter-spacing:.02em}
 
 /* ---------- daily line ---------- */
 section.blk.quote{margin:16px 0 20px}
@@ -375,21 +382,6 @@ section.blk.quote{margin:16px 0 20px}
   text-align:center;font-family:"IBM Plex Mono",monospace;font-size:15px;padding:0}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
-
-<div id="splash" role="presentation">
-  <svg viewBox="0 0 100 100" aria-hidden="true">
-    <defs><clipPath id="ballclip"><circle cx="50" cy="33.5" r="21.5"/></clipPath></defs>
-    <circle cx="50" cy="33.5" r="21.5" fill="#EFE9E0"/>
-    <g clip-path="url(#ballclip)" stroke="#15120E" stroke-width="2.6" fill="none">
-      <line x1="28.5" y1="33.5" x2="71.5" y2="33.5"/>
-      <line x1="50" y1="12" x2="50" y2="55"/>
-      <ellipse cx="36.7" cy="33.5" rx="14" ry="22.6"/>
-      <ellipse cx="63.3" cy="33.5" rx="14" ry="22.6"/>
-    </g>
-    <ellipse cx="50" cy="73.5" rx="36" ry="10.5" fill="none" stroke="#FF6A33" stroke-width="7.8"/>
-  </svg>
-  <div class="word">Rise</div>
-</div>
 
 <header class="app">
   <div class="wrap">
@@ -1028,6 +1020,13 @@ function liftChartSVG(series) {
 
 /* Minutes per set, rest included — the rest is most of it. Max-effort jumps
    carry three minutes each, which is why the jump days run long. */
+/* The drills the rest guide calls non-negotiable: every max-effort takeoff,
+   plus heavy triples on the two main bars. */
+function needsLongRest(it) {
+  if (it.hiPer && /approach|rim.?touch|dunk|depth|max touch/i.test(it.text)) return true;
+  if (/back squat|trap-bar deadlift/i.test(it.text) && it.reps && +it.reps <= 3) return true;
+  return false;
+}
 function setCost(it) {
   var x = it.text;
   if (it.hiPer) return /approach|rim.?touch|dunk|depth|max touch/i.test(x) ? 3.3 : 2.3;
@@ -1214,7 +1213,8 @@ function itemHTML(week, dk, it) {
   if (!it.hasSets) {
     h += '<button class="tick" data-act="set" data-k="' + it.key + '" data-i="0" aria-pressed="' + (arr[0] ? "true" : "false") + '">&#10003;</button>';
   }
-  h += '<div class="ex-nm">' + name;
+  var lr = needsLongRest(it);
+  h += '<div class="ex-nm">' + (lr ? '<span class="rest3">' + name + " <b>3:00</b></span>" : name);
   if (it.detail) h += '<div class="pre">' + esc(it.detail) + "</div>";
   else if (it.pct) h += '<div class="pre">' + Math.round(it.pct * 100) + "% of est. 1RM</div>";
   h += "</div></div>";
@@ -1961,28 +1961,6 @@ if (pos && !pos.before && !pos.after) { S.ui.w = pos.w; S.ui.d = pos.d; }
 S.ui.pickW = S.ui.pickW || S.ui.w;
 render();
 connect();
-
-/* Hold the launch screen briefly so it reads as a launch rather than a flash,
-   then fade it out. Never let it outlast 2 seconds, whatever the fonts do. */
-(function () {
-  var splash = el("splash");
-  if (!splash) return;
-  var shown = Date.now();
-  function done() {
-    var wait = Math.max(0, 650 - (Date.now() - shown));
-    setTimeout(function () {
-      splash.dataset.off = "1";
-      setTimeout(function () { splash.remove(); }, 450);
-    }, wait);
-  }
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(done).catch(done);
-  } else {
-    done();
-  }
-  setTimeout(done, 2000);
-})();
-
 })();
 
 </script>
