@@ -888,10 +888,20 @@ function buildSessions(week, st) {
 
   out.sun.push({
     id: "sun", title: "Rest", meta: "free day", hi: 0,
-    items: [{ kind: "note", text: "No session scheduled. If you play, keep it easy and off the max jumps — Tuesday is the day that needs your legs." }]
+    items: [{ kind: "note", text: "No session scheduled. If you play, keep it easy and off the max jumps — Monday is the day that needs your legs." }]
   });
 
   Object.keys(out).forEach(function (k) { out[k] = out[k].filter(Boolean); });
+
+  /* Never lift legs the day before you jump. Week 1 has already had its Monday,
+     so it reflows around it; every week after simply trades Mon and Tue. */
+  var swap;
+  if (week === 1) {
+    swap = out.tue; out.tue = out.wed; out.wed = swap;   // jump day -> Wednesday
+    swap = out.thu; out.thu = out.fri; out.fri = swap;   // explosive -> Friday
+  } else {
+    swap = out.mon; out.mon = out.tue; out.tue = swap;
+  }
   return out;
 }
 
@@ -1292,7 +1302,7 @@ function hiCardHTML(week, dk) {
     '<div class="body" style="padding:0 0 6px">' +
     "<p>A hard jump is any all-out takeoff: approach jumps, rim touches, dunk attempts, max standing jumps, box and depth jumps. Pogos, bounds, sprints, jump squats and landing drills do not count — they are easy on the tendon.</p>" +
     "<p>Your Achilles and patellar tendons take 8 to 12 weeks to adapt, far slower than muscle. Hard jumps are what load them, so the number of them per week decides whether you build or break down. Every week has a ceiling for that reason.</p>" +
-    "<p>If the week runs over, cut Thursday first, then Tuesday's extra jumps. Never cut a deload week to make room.</p>" +
+    "<p>If the week runs over, cut Thursday first, then Monday's extra jumps. Never cut a deload week to make room.</p>" +
     "</div></details></div></div></section>";
 }
 
@@ -1310,6 +1320,9 @@ function viewToday() {
 
   var qt = quoteFor(week, dk);
   h += '<section class="blk quote"><i></i><p>' + esc(qt[0]) + "</p><cite>" + esc(qt[1]) + "</cite></section>";
+  if (week === 1 && ["tue", "wed", "thu", "fri"].indexOf(dk) >= 0) {
+    h += '<div class="alert acc">Week 1 is shifted. Monday\'s lifting is already done, so the jump day moves to Wednesday — 48 hours later — and the explosive session takes Friday. From week 2, Monday is the jump day.</div>';
+  }
   var dm = dayMinutes(week, dk);
   if (dm > 5) {
     h += '<div class="daytime"><b>' + fmtMins(dm) + "</b><span>" +
@@ -1398,7 +1411,7 @@ function viewCal() {
     }
     var rec = S.weeks[pos.w] && S.weeks[pos.w].d && S.weeks[pos.w].d[pos.d];
     var pr = dayProgress(pos.w, pos.d);
-    var rest = pos.d === "fri" || pos.d === "sun";
+    var rest = pr.total === 0;   // a day with nothing to tick is a rest day
     var state = rest ? "rest"
       : (rec && rec.done) ? "done"
       : pr.done > 0 ? "part"
@@ -1719,8 +1732,8 @@ function viewGuide() {
   h += '<section class="blk"><span class="eyebrow">Running short on time</span><div class="panel">' +
     '<details class="acc" open><summary>What to cut, in order</summary><div class="body">' +
     "<p><b>1. Superset the accessories.</b> Pair things that do not compete: calves with tibialis, lateral raise with sit-ups, chest row with back extension. Saves 10 to 15 minutes and costs nothing.</p>" +
-    "<p><b>2. Move the shooting block.</b> The 20 minutes of shooting on Tuesday is skill work, not training load. Do it another time and Tuesday drops by a third.</p>" +
-    "<p><b>3. Split the day.</b> Monday is a lower session and a push session. They are allowed to be hours apart — the plan only asks for 20 minutes between them.</p>" +
+    "<p><b>2. Move the shooting block.</b> The 20 minutes of shooting on the jump day is skill work, not training load. Do it another time and that day drops by a third.</p>" +
+    "<p><b>3. Split the day.</b> The lifting day pairs a lower session with a push session. They are allowed to be hours apart — the plan only asks for 20 minutes between them.</p>" +
     "<p><b>4. Cut upper sets from 4 to 3.</b> Costs you the least of anything here.</p>" +
     "<p><b>5. Halve the rim touches</b> on weeks with no dunk window. They overlap with the approach jumps.</p>" +
     "</div></details>" +
@@ -1733,12 +1746,12 @@ function viewGuide() {
   h += '<section class="blk"><span class="eyebrow">Fitting games in</span><div class="panel">' +
     '<details class="acc"><summary>You have a game on Saturday</summary><div class="body">' +
     "<p><b>Let the game replace Saturday.</b> Saturday is strength with barely any jumping, and the programme's own rule is to skip a missed session rather than stack it somewhere else.</p>" +
-    "<p>If you want the lift anyway, move it to Sunday and cut Monday back to the squat alone that week — otherwise you are lifting legs three days in a row.</p>" +
+    "<p>If you want the lift anyway, move it to Sunday and cut the next lifting day back to the squat alone that week — otherwise you are lifting legs three days in a row.</p>" +
     "<p>Keep Friday as rest either way. It is what makes you fresh for the game.</p>" +
     "</div></details>" +
     '<details class="acc"><summary>You want to play on Sunday</summary><div class="body">' +
-    "<p>Fine — Sunday is free. Two conditions: keep it to about 75 minutes, and if it runs long or hard, drop Monday to technique work at 60%.</p>" +
-    "<p>Never play both Saturday and Sunday. That is four hard leg days in a row before Tuesday.</p>" +
+    "<p>Fine — Sunday is free, but Monday is now your jump day. Keep it to about 75 minutes, and if it runs long or hard, drop Monday to technique work at 60%.</p>" +
+    "<p>Never play both Saturday and Sunday. That is four hard leg days in a row before your jump day.</p>" +
     "</div></details>" +
     '<details class="acc"><summary>Games count as jumps</summary><div class="body">' +
     "<p>A competitive game is roughly 15 to 25 hard jumps — rebounds, layups, contested shots. The app cannot see those, so add them to your own count when you check the weekly cap.</p>" +
@@ -1756,6 +1769,7 @@ function viewGuide() {
 
   h += '<section class="blk"><span class="eyebrow">Program principles</span><div class="panel">';
   P.principles.forEach(function (p) {
+    p = { t: p.t, d: p.d.replace("Tue and Thu", "Mon and Thu") };
     h += '<div class="ex"><div class="ex-nm"><b>' + esc(p.t) + '</b><div class="pre" style="white-space:normal;font-family:inherit;font-size:13px;margin-top:3px">' + esc(p.d) + "</div></div></div>";
   });
   h += "</div></section>";
