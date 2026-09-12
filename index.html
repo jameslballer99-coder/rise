@@ -318,6 +318,48 @@ details.acc .body p:last-child{margin-bottom:0}
   #splash[data-off="1"]{transition:none}
 }
 
+/* ---------- floating rest timer ---------- */
+.fab{position:fixed;right:14px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:45;
+  display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.fabbtn{width:52px;height:52px;border-radius:50%;background:var(--ink);color:var(--ground);
+  display:grid;place-items:center;box-shadow:var(--shadow);border:none}
+.fabbtn svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round}
+.fab.open .fabbtn{background:var(--accent);color:var(--accent-ink)}
+.fabopts{display:none;flex-direction:column;gap:7px;align-items:flex-end}
+.fab.open .fabopts{display:flex}
+.fabopts button{padding:9px 15px;border-radius:22px;background:var(--surface);border:1px solid var(--line);
+  box-shadow:var(--shadow);font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:600;color:var(--ink)}
+.fabopts button:first-child{color:var(--accent);border-color:var(--accent)}
+
+/* ---------- extras ---------- */
+.xrow{display:flex;align-items:center;gap:10px;padding:9px 12px}
+.xrow + .xrow{border-top:1px solid var(--line-soft)}
+.xl{flex:1;font-size:14px}
+.xdel{width:30px;height:30px;flex:none;color:var(--faint);font-size:19px;line-height:1;border-radius:7px}
+.xdel:active{background:var(--line-soft)}
+.xadd{display:flex;flex-wrap:wrap;gap:6px;padding:11px 12px;border-top:1px solid var(--line-soft)}
+.xadd button{padding:6px 11px;border:1px dashed var(--line);border-radius:18px;background:transparent;
+  font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13.5px;color:var(--muted)}
+.xadd button:active{background:var(--line-soft)}
+
+/* ---------- move a session ---------- */
+.movebox{padding:12px}
+.movepick{display:flex;gap:6px;margin-top:10px}
+.movepick button{flex:1;padding:9px 0;border:1px solid var(--line);border-radius:9px;background:var(--raise);
+  font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:13px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-2)}
+.movepick button:active{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* ---------- rest day ---------- */
+.restday{padding:22px 14px;text-align:center}
+.restday b{display:block;font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:24px;
+  letter-spacing:.04em;color:var(--ink)}
+.restday span{display:block;font-size:13.5px;color:var(--muted);margin-top:6px;line-height:1.5}
+.callegend .k.rest{background:var(--line-soft);box-shadow:inset 0 0 0 1px var(--line)}
+.rg.hot b{color:var(--accent)}
+.rgfoot{padding:10px 12px;border-top:1px solid var(--line-soft);font-size:12px;color:var(--faint);line-height:1.45}
+
 /* ---------- three-minute rest ---------- */
 .rest3{color:var(--accent)}
 .rest3 b{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;
@@ -908,7 +950,7 @@ function buildSessions(week, st) {
 /* Planned contacts for a day: every scoring set in the session. */
 function plannedHI(week, dk) {
   var tot = 0;
-  sessionsFor(week)[dk].forEach(function (s) {
+  slotSessions(week, dk).forEach(function (s) {
     s.items.forEach(function (it) { if (it.hiPer) tot += it.hiPer * (it.hasSets ? it.sets : 1); });
   });
   return tot;
@@ -918,7 +960,7 @@ function plannedHI(week, dk) {
 function actualHI(week, dk) {
   var rec = wk(week).d[dk], tot = 0;
   if (!rec) return 0;
-  sessionsFor(week)[dk].forEach(function (s) {
+  slotSessions(week, dk).forEach(function (s) {
     s.items.forEach(function (it) {
       if (!it.hiPer) return;
       var arr = rec.s[it.key] || [];
@@ -932,7 +974,7 @@ function actualHI(week, dk) {
 /* Which drills contributed, for the breakdown under the counter. */
 function hiBreakdown(week, dk) {
   var rec = wk(week).d[dk], out = [];
-  sessionsFor(week)[dk].forEach(function (s) {
+  slotSessions(week, dk).forEach(function (s) {
     s.items.forEach(function (it) {
       if (!it.hiPer) return;
       var arr = (rec && rec.s[it.key]) || [];
@@ -956,7 +998,7 @@ function loggedHI(week) {
 }
 
 function dayProgress(week, dk) {
-  var ss = sessionsFor(week)[dk], done = 0, tot = 0;
+  var ss = slotSessions(week, dk), done = 0, tot = 0;
   ss.forEach(function (s) {
     s.items.forEach(function (it) {
       if (it.kind !== "ex") return;
@@ -972,13 +1014,74 @@ function dayProgress(week, dk) {
   return { done: done, total: tot };
 }
 
+/* ---------------- which session sits on which weekday ---------------- */
+
+/* A week may be reshuffled when life gets in the way. `order` maps each
+   weekday slot to the day whose session it now holds; identity by default. */
+function dayOrder(week) {
+  var o = wk(week).order;
+  return (o && o.length === 7) ? o : DAYS.slice();
+}
+function srcDay(week, dk) { return dayOrder(week)[DAYS.indexOf(dk)]; }
+function isMoved(week, dk) { return srcDay(week, dk) !== dk; }
+function slotSessions(week, dk) { return sessionsFor(week)[srcDay(week, dk)] || []; }
+
+/* Swap two weekdays, carrying the logged sets along with the session. */
+function swapDays(week, a, b) {
+  if (a === b) return;
+  var W = wk(week);
+  var o = dayOrder(week).slice();
+  var ia = DAYS.indexOf(a), ib = DAYS.indexOf(b);
+  var tmp = o[ia]; o[ia] = o[ib]; o[ib] = tmp;
+  W.order = o;
+  W.d = W.d || {};
+  var da = W.d[a], db = W.d[b];
+  /* Extras belong to the calendar day — shooting on Friday stays on Friday
+     even when Friday's workout moves elsewhere. Everything else is the
+     session's own record and travels with it. */
+  var exA = da && da.extras, exB = db && db.extras;
+  if (db === undefined) delete W.d[a]; else W.d[a] = db;
+  if (da === undefined) delete W.d[b]; else W.d[b] = da;
+  [[a, exA], [b, exB]].forEach(function (p) {
+    if (p[1] && p[1].length) day(week, p[0]).extras = p[1];
+    else if (W.d[p[0]]) delete W.d[p[0]].extras;
+  });
+  sessCache = {};
+  touchWeek(week);
+}
+function resetOrder(week) {
+  var W = wk(week);
+  if (!W.order) return;
+  var old = dayOrder(week), byDay = {}, extras = {};
+  DAYS.forEach(function (dk, i) {
+    byDay[old[i]] = W.d && W.d[dk];
+    if (W.d && W.d[dk] && W.d[dk].extras) extras[dk] = W.d[dk].extras;
+  });
+  W.d = {};
+  DAYS.forEach(function (dk) { if (byDay[dk] !== undefined) W.d[dk] = byDay[dk]; });
+  DAYS.forEach(function (dk) {                      // extras never moved days
+    if (W.d[dk]) delete W.d[dk].extras;
+    if (extras[dk]) day(week, dk).extras = extras[dk];
+  });
+  delete W.order;
+  sessCache = {};
+  touchWeek(week);
+}
+
 /* ---------------- logged weights ---------------- */
 
 /* Strip the prescription off an exercise line so it reads as a lift name. */
 function liftLabel(s) {
-  return String(s).replace(/\(.*?\)/g, "")
-    .replace(/[0-9]+\s*[x×]\s*[0-9]+.*$/, "")
-    .replace(/\s+/g, " ").trim();
+  var base = String(s).replace(/\(.*?\)/g, "");
+  var out = base.replace(/[0-9]+\s*[x×]\s*[0-9]+.*$/, "").replace(/\s+/g, " ").trim();
+  if (!out) {                                   // the count came first, e.g. "2x2 rim touches"
+    out = base.replace(/[0-9]+\s*[x×]\s*[0-9]+/, "").replace(/,.*$/, "").replace(/\s+/g, " ").trim();
+  }
+  if (!out) out = base.replace(/,.*$/, "").replace(/\s+/g, " ").trim();
+  out = out.replace(/^then\s+/i, "")
+    .replace(/,\s*[0-9]+\s*min.*$/i, "")      // drop trailing ", 3 min rest"
+    .replace(/\s*[—-]\s*$/, "").trim();
+  return out.charAt(0).toUpperCase() + out.slice(1);
 }
 
 /* { nameKey: {label, points:[{w, kg}]} } across all 24 weeks, in week order. */
@@ -987,11 +1090,10 @@ function liftSeries() {
   for (var n = 1; n <= 24; n++) {
     var W = S.weeks[n];
     if (!W || !W.d) continue;
-    var built = sessionsFor(n);
     DAYS.forEach(function (dk) {
       var rec = W.d[dk];
       if (!rec || !rec.ld) return;
-      built[dk].forEach(function (s) {
+      slotSessions(n, dk).forEach(function (s) {
         s.items.forEach(function (it) {
           var e = rec.ld[it.key];
           if (!e || e.w == null || e.w === "") return;
@@ -1054,18 +1156,25 @@ function liftChartSVG(series) {
    carry three minutes each, which is why the jump days run long. */
 /* The drills the rest guide calls non-negotiable: every max-effort takeoff,
    plus heavy triples on the two main bars. */
-function needsLongRest(it) {
-  if (it.hiPer && /approach|rim.?touch|dunk|depth|max touch/i.test(it.text)) return true;
-  if (/back squat|trap-bar deadlift/i.test(it.text) && it.reps && +it.reps <= 3) return true;
-  return false;
+/* How long to rest after a set of this. The single source of truth: the orange
+   3:00 marks, the rest guide and the session-length estimate all read it, so
+   they cannot drift apart. */
+var LONGREST_PAT = /approach|rim.?touch|dunk|depth|max touch|attempts/i;
+function restSeconds(it) {
+  if (!it.hasSets && !it.hiPer) return 0;   // warm-ups and shooting, not sets
+  if (it.hiPer && LONGREST_PAT.test(it.text)) return 180;
+  if (/back squat|trap-bar deadlift/i.test(it.text)) return (it.reps && +it.reps <= 3) ? 180 : 120;
+  if (it.hiPer) return 120;                       // CMJ, box, broad, hurdle, trap-bar jumps
+  return 60;                                      // accessories, upper body, calves, core
 }
+function needsLongRest(it) { return restSeconds(it) === 180; }
 function setCost(it) {
   var x = it.text;
-  if (it.hiPer) return /approach|rim.?touch|dunk|depth|max touch/i.test(x) ? 3.3 : 2.3;
   if (LI_PAT.test(x)) return 1.3;
-  if (/back squat|trap-bar deadlift/i.test(x)) return 3.0;
-  if (/plank|dead bug|twist|stretch|rotation|90\/90/i.test(x)) return 1.1;
-  return 1.7;
+  var rest = restSeconds(it) / 60;
+  if (/back squat|trap-bar deadlift/i.test(x)) return rest + 0.6;
+  if (/plank|dead bug|twist|stretch|rotation|90\/90/i.test(x)) return rest + 0.5;
+  return rest + 0.5;
 }
 function sessionMinutes(s) {
   var t = 0;
@@ -1082,7 +1191,7 @@ function sessionMinutes(s) {
   return Math.max(5, Math.round(t / 5) * 5);
 }
 function dayMinutes(week, dk) {
-  return sessionsFor(week)[dk].reduce(function (a, s) { return a + sessionMinutes(s); }, 0);
+  return slotSessions(week, dk).reduce(function (a, s) { return a + sessionMinutes(s); }, 0);
 }
 function fmtMins(m) {
   if (m < 60) return m + " min";
@@ -1103,7 +1212,7 @@ function el(id) { return document.getElementById(id); }
 
 var T = { end: 0, len: 0, tick: null, lock: null };
 function startTimer(sec) {
-  T.len = sec; T.end = Date.now() + sec * 1000;
+  T.len = sec; T.end = Date.now() + sec * 1000; T.open = false;
   if (!T.tick) T.tick = setInterval(paintTimer, 250);
   requestWake();
   paintTimer();
@@ -1117,7 +1226,21 @@ async function requestWake() {
 function releaseWake() { try { if (T.lock) { T.lock.release(); T.lock = null; } } catch (e) {} }
 function paintTimer() {
   var host = el("timerHost");
-  if (!T.end) { host.innerHTML = ""; return; }
+  if (S.ui.tab !== "today") { host.innerHTML = ""; return; }
+
+  if (!T.end) {
+    /* Parked: a tap opens the three rest lengths, wherever you are on the page. */
+    host.innerHTML = '<div class="fab' + (T.open ? " open" : "") + '">' +
+      '<div class="fabopts">' +
+      [180, 120, 60].map(function (s) {
+        return '<button data-act="timer" data-s="' + s + '">' + Math.floor(s / 60) + ":00</button>";
+      }).join("") + "</div>" +
+      '<button class="fabbtn" data-act="fab" aria-label="Rest timer" aria-expanded="' + (T.open ? "true" : "false") + '">' +
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>' +
+      "</button></div>";
+    return;
+  }
+
   var left = Math.round((T.end - Date.now()) / 1000);
   if (left <= -20) { stopTimer(); return; }
   var over = left <= 0;
@@ -1127,8 +1250,8 @@ function paintTimer() {
   var txt = Math.floor(v / 60) + ":" + String(v % 60).padStart(2, "0");
   host.innerHTML =
     '<div class="timer ' + (over ? "done" : "run") + '">' +
-    '<small>' + (over ? "go" : "rest") + '</small>' +
-    '<span>' + txt + '</span>' +
+    '<small>' + (over ? "go" : "rest") + "</small>" +
+    "<span>" + txt + "</span>" +
     '<button class="x" data-act="tstop" aria-label="Stop timer">&times;</button></div>';
 }
 
@@ -1306,9 +1429,70 @@ function hiCardHTML(week, dk) {
     "</div></details></div></div></section>";
 }
 
+var EXTRAS = [["Upper body", "upper"], ["Shooting", "shoot"], ["Court / game", "court"], ["Other", "other"]];
+
+function extrasHTML(week, dk) {
+  var list = day(week, dk).extras || [];
+  var h = '<section class="blk"><span class="eyebrow">Anything else today</span><div class="panel">';
+  list.forEach(function (e, i) {
+    h += '<div class="xrow"><button class="tick" data-act="xtog" data-i="' + i + '" aria-pressed="' +
+      (e.done ? "true" : "false") + '">&#10003;</button><span class="xl">' + esc(e.t) + "</span>" +
+      '<button class="xdel" data-act="xdel" data-i="' + i + '" aria-label="Remove ' + esc(e.t) + '">&times;</button></div>';
+  });
+  h += '<div class="xadd">';
+  EXTRAS.forEach(function (p) {
+    h += '<button data-act="xadd" data-k="' + p[1] + '" data-t="' + esc(p[0]) + '">+ ' + esc(p[0]) + "</button>";
+  });
+  return h + "</div></div></section>";
+}
+
+function moveHTML(week, dk) {
+  var src = srcDay(week, dk), moved = isMoved(week, dk);
+  var h = '<section class="blk"><span class="eyebrow">Move this session</span><div class="panel"><div class="movebox">' +
+    '<div class="note">' + (moved
+      ? "Showing " + DAYFULL[src] + "'s session. Pick a day to swap it again, or put the week back."
+      : "Missed it, or need it on another day? Pick a day and the two swap over — your ticks go with it.") +
+    "</div><div class=\"movepick\">";
+  DAYS.forEach(function (d2) {
+    if (d2 === dk) return;
+    h += '<button data-act="moveday" data-d="' + d2 + '">' + DAYNM[d2] + "</button>";
+  });
+  h += "</div>";
+  if (dayOrder(week).join() !== DAYS.join()) {
+    h += '<button class="btn ghost" data-act="resetorder" style="margin-top:10px">Reset this week</button>';
+  }
+  return h + "</div></div></section>";
+}
+
+/* Built from restSeconds(), so it always matches the orange marks on screen. */
+function restGuideHTML(week, dk) {
+  var buckets = { 180: [], 120: [], 60: [] };
+  slotSessions(week, dk).forEach(function (s) {
+    s.items.forEach(function (it) {
+      var r = restSeconds(it);
+      if (!r) return;
+      var name = liftLabel(it.text);
+      if (buckets[r].indexOf(name) < 0) buckets[r].push(name);
+    });
+  });
+  var rows = "";
+  [[180, "3:00", "Non-negotiable."], [120, "2:00", ""], [60, "1:00", ""]].forEach(function (b) {
+    if (!buckets[b[0]].length) return;
+    rows += '<div class="rg' + (b[0] === 180 ? " hot" : "") + '"><b>' + b[1] + "</b><span>" +
+      (b[2] ? '<em>' + b[2] + "</em> " : "") + esc(buckets[b[0]].join(", ")) + "</span></div>";
+  });
+  if (!rows) return "";
+  return '<section class="blk"><span class="eyebrow">Rest between sets</span><div class="panel">' +
+    '<div class="restguide">' + rows + "</div>" +
+    '<div class="rgfoot">Three minutes is the dose, not a suggestion — short rest on max efforts trains your fatigue instead of your peak.</div>' +
+    "</div></section>";
+}
+
 function viewToday() {
   var week = S.ui.w, dk = S.ui.d, W = P.weeks[week - 1];
-  var ss = sessionsFor(week)[dk], D = day(week, dk);
+  var ss = slotSessions(week, dk), D = day(week, dk);
+  var pr = dayProgress(week, dk);
+  var isRest = pr.total === 0;
   var h = "";
 
   if (/DELOAD/i.test(W.load)) {
@@ -1330,6 +1514,19 @@ function viewToday() {
       "</span></div>";
   }
 
+  if (isMoved(week, dk)) {
+    h += '<div class="alert acc">Moved here from ' + esc(DAYFULL[srcDay(week, dk)]) + ".</div>";
+  }
+
+  if (isRest) {
+    /* Nothing to tick, so say so plainly rather than showing an empty session. */
+    h += '<section class="blk"><div class="panel"><div class="restday"><b>Rest day</b><span>' +
+      esc((ss[0] && ss[0].items[0] && ss[0].items[0].text) ||
+          "Nothing scheduled. Tendons rebuild on the days you do not train.") +
+      "</span></div></div></section>";
+    ss = [];
+  }
+
   ss.forEach(function (s) {
     h += '<div class="sess panel"><div class="sess-head"><span class="nm">' + esc(s.title) + "</span>" +
       (s.meta ? '<span class="meta">' + esc(s.meta) + "</span>" : "") +
@@ -1339,25 +1536,18 @@ function viewToday() {
   });
 
   if (plannedHI(week, dk) > 0) h += hiCardHTML(week, dk);
+  h += restGuideHTML(week, dk);
+  h += extrasHTML(week, dk);
+  h += moveHTML(week, dk);
 
-  h += '<section class="blk"><span class="eyebrow">Rest timer</span><div class="panel"><div class="hi">' +
-    '<div style="display:flex;gap:8px">' +
-    '<button class="btn" data-act="timer" data-s="60">1:00</button>' +
-    '<button class="btn" data-act="timer" data-s="120">2:00</button>' +
-    '<button class="btn" data-act="timer" data-s="180">3:00</button>' +
-    "</div></div>" +
-    '<div class="restguide">' +
-    '<div class="rg"><b>3:00</b><span><em>Non-negotiable.</em> Max approach jumps, rim touches, dunk attempts, depth jumps, and any heavy triple on the squat or trap-bar. These are nervous-system efforts — short rest trains your fatigue instead of your peak.</span></div>' +
-    '<div class="rg"><b>2:00</b><span>Back squat and trap-bar work sets of four or five.</span></div>' +
-    '<div class="rg"><b>1:00</b><span>Accessories, upper body, calves and core.</span></div>' +
-    "</div></div></section>";
-
-  h += '<section class="blk"><span class="eyebrow">Session notes</span>' +
+  h += '<section class="blk"><span class="eyebrow">Notes</span>' +
     '<textarea class="txtin" data-act="note" placeholder="How the jumps felt, bar speed, anything that hurt.">' + esc(D.note || "") + "</textarea></section>";
 
-  var pr = dayProgress(week, dk);
-  h += '<section class="blk"><button class="btn ' + (D.done ? "done" : "pri") + '" data-act="finish">' +
-    (D.done ? "Session complete ✓" : "Finish session · " + pr.done + "/" + pr.total) + "</button></section>";
+  /* A rest day has nothing to tick, so it does not ask to be finished. */
+  if (!isRest) {
+    h += '<section class="blk"><button class="btn ' + (D.done ? "done" : "pri") + '" data-act="finish">' +
+      (D.done ? "Session complete ✓" : "Finish session · " + pr.done + "/" + pr.total) + "</button></section>";
+  }
 
   return h;
 }
@@ -1432,6 +1622,7 @@ function viewCal() {
     '<span><i class="k done"></i>done</span>' +
     '<span><i class="k part"></i>started</span>' +
     '<span><i class="k todo"></i>to do</span>' +
+    '<span><i class="k rest"></i>rest</span>' +
     '<span><i class="k win"></i>dunk window</span>' +
     '<span><i class="k dl"></i>deload week</span></div>';
   h += '<div class="sub">' + doneThis + " of " + schedThis + " sessions completed this month. Tap any day to open it.</div></section>";
@@ -1452,7 +1643,7 @@ function viewCal() {
 
   h += '<section class="blk"><span class="eyebrow">Days</span><div class="panel daylist">';
   DAYS.forEach(function (dk) {
-    var pr = dayProgress(week, dk), ss = sessionsFor(week)[dk];
+    var pr = dayProgress(week, dk), ss = slotSessions(week, dk);
     var titles = ss.map(function (s) { return s.title; }).join(" + ");
     var d = dateOf(week, dk);
     var isToday = tp && tp.w === week && tp.d === dk;
@@ -1866,6 +2057,7 @@ function stepDay(dir) {
 
 document.addEventListener("click", function (ev) {
   var b = ev.target.closest("button, [data-close]");
+  if (T.open && (!b || ["fab", "timer"].indexOf(b.dataset.act) < 0)) { T.open = false; paintTimer(); }
   if (!b) return;
   var act = b.dataset.act;
 
@@ -1894,7 +2086,34 @@ document.addEventListener("click", function (ev) {
       render();
       break;
     }
+    case "fab": T.open = !T.open; paintTimer(); break;
     case "timer": startTimer(+b.dataset.s); break;
+    case "xadd": {
+      var Dx = day(S.ui.w, S.ui.d);
+      var label = b.dataset.t;
+      if (b.dataset.k === "other") {
+        label = (prompt("What did you do?") || "").trim();
+        if (!label) break;
+      }
+      Dx.extras = Dx.extras || [];
+      Dx.extras.push({ k: b.dataset.k, t: label, done: true });
+      touchWeek(S.ui.w); render();
+      break;
+    }
+    case "xtog": {
+      var Dt = day(S.ui.w, S.ui.d), xi = +b.dataset.i;
+      if (Dt.extras && Dt.extras[xi]) Dt.extras[xi].done = !Dt.extras[xi].done;
+      touchWeek(S.ui.w); render();
+      break;
+    }
+    case "xdel": {
+      var Dd = day(S.ui.w, S.ui.d), di = +b.dataset.i;
+      if (Dd.extras) Dd.extras.splice(di, 1);
+      touchWeek(S.ui.w); render();
+      break;
+    }
+    case "moveday": swapDays(S.ui.w, S.ui.d, b.dataset.d); render(); break;
+    case "resetorder": resetOrder(S.ui.w); render(); break;
     case "tstop": stopTimer(); break;
     case "finish": {
       var Df = day(S.ui.w, S.ui.d);
