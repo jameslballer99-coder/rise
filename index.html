@@ -318,6 +318,8 @@ details.acc .body p:last-child{margin-bottom:0}
   #splash[data-off="1"]{transition:none}
 }
 
+.chip.rehab{border-color:transparent;background:var(--accent-wash);color:var(--accent)}
+
 /* ---------- floating rest timer ---------- */
 .fab{position:fixed;right:14px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:45;
   display:flex;flex-direction:column;align-items:flex-end;gap:8px}
@@ -516,12 +518,19 @@ var S = {
     start: null, theme: "auto"
   },
   weeks: {},
+  rehab: {},
   ui: { tab: "today", w: 1, d: "mon", pickW: 1 }
 };
 var db = null, saveTimers = {};
 
 function blankWeek() { return { updatedAt: 0, d: {}, log: {} }; }
-function wk(n) { if (!S.weeks[n]) S.weeks[n] = blankWeek(); return S.weeks[n]; }
+
+/* Two blocks share the app: the back rebuild, then the jump programme. Each
+   keeps its own weeks so neither overwrites the other. */
+function inRehab() { return S.settings.phase !== "jump"; }
+function store() { return inRehab() ? S.rehab : S.weeks; }
+function NWEEKS() { return inRehab() ? REHAB.length : 24; }
+function wk(n) { var st = store(); if (!st[n]) st[n] = blankWeek(); return st[n]; }
 function day(n, dk) { var w = wk(n); if (!w.d[dk]) w.d[dk] = { s: {}, ld: {}, reps: {}, hi: null, note: "", done: false }; return w.d[dk]; }
 function wid(n) { return "w" + (n < 10 ? "0" + n : n); }
 
@@ -532,11 +541,12 @@ function loadLocal() {
     var o = JSON.parse(raw);
     if (o.settings) Object.assign(S.settings, o.settings);
     if (o.weeks) S.weeks = o.weeks;
+    if (o.rehab) S.rehab = o.rehab;
     if (o.ui) Object.assign(S.ui, o.ui);
   } catch (e) { /* first run, or storage blocked */ }
 }
 function saveLocal() {
-  try { localStorage.setItem(LS, JSON.stringify({ settings: S.settings, weeks: S.weeks, ui: S.ui })); }
+  try { localStorage.setItem(LS, JSON.stringify({ settings: S.settings, weeks: S.weeks, rehab: S.rehab, ui: S.ui })); }
   catch (e) { /* storage blocked — session-only */ }
 }
 
@@ -547,9 +557,10 @@ function touchWeek(n) {
 }
 function pushWeek(n) {
   if (!db) return;
+  var pre = inRehab() ? "r" : "";
   clearTimeout(saveTimers[n]);
   saveTimers[n] = setTimeout(function () {
-    db.doc("weeks/" + wid(n)).set(JSON.parse(JSON.stringify(S.weeks[n]))).catch(function () {});
+    db.doc("weeks/" + pre + wid(n)).set(JSON.parse(JSON.stringify(store()[n]))).catch(function () {});
   }, 600);
 }
 function pushSettings() {
@@ -576,10 +587,12 @@ async function connect() {
     }
     var qs = await db.collection("weeks").get();
     qs.docs.forEach(function (ds) {
-      var n = parseInt(ds.id.replace("w", ""), 10);
+      var rehabDoc = ds.id.charAt(0) === "r";
+      var n = parseInt(ds.id.replace(/^r?w/, ""), 10);
       var rem = ds.data();
       if (!n || !rem) return;
-      if ((rem.updatedAt || 0) >= ((S.weeks[n] && S.weeks[n].updatedAt) || 0)) S.weeks[n] = rem;
+      var into = rehabDoc ? S.rehab : S.weeks;
+      if ((rem.updatedAt || 0) >= ((into[n] && into[n].updatedAt) || 0)) into[n] = rem;
     });
     saveLocal();
     render();
@@ -590,7 +603,7 @@ async function connect() {
 /* ---------------- backup ---------------- */
 
 function backupBlob() {
-  return JSON.stringify({ app: "rimgap", v: 1, saved: new Date().toISOString(), settings: S.settings, weeks: S.weeks }, null, 1);
+  return JSON.stringify({ app: "rimgap", v: 1, saved: new Date().toISOString(), settings: S.settings, weeks: S.weeks, rehab: S.rehab }, null, 1);
 }
 async function exportData() {
   var name = "rise-" + isoDate(new Date()) + ".json";
@@ -618,9 +631,10 @@ function importData(file) {
     if (!confirm("Replace everything on this device with the backup from " + (o.saved || "").slice(0, 10) + "?")) return;
     Object.assign(S.settings, o.settings || {});
     S.weeks = o.weeks;
+    S.rehab = o.rehab || {};
     S.settings.updatedAt = Date.now();
     saveLocal(); pushSettings();
-    for (var n = 1; n <= 24; n++) if (S.weeks[n]) { S.weeks[n].updatedAt = Date.now(); pushWeek(n); }
+    for (var n = 1; n <= NWEEKS(); n++) if (store()[n]) { store()[n].updatedAt = Date.now(); pushWeek(n); }
     sessCache = {};
     closeSheet();
   };
@@ -681,6 +695,12 @@ function currentStage(week) {
   return P.stages.length - 1;
 }
 
+function mondayOf(d) {
+  var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  return isoDate(x);
+}
+
 /* week/day from the start date */
 function startDate() {
   if (!S.settings.start) return null;
@@ -694,7 +714,7 @@ function todayPos() {
   var diff = Math.floor((now - sd) / 86400000);
   if (diff < 0) return { w: 1, d: "mon", before: true };
   var w = Math.floor(diff / 7) + 1;
-  if (w > 24) return { w: 24, d: "sun", after: true };
+  if (w > NWEEKS()) return { w: NWEEKS(), d: "sun", after: true };
   return { w: w, d: DAYS[diff % 7] };
 }
 function dateOf(week, dk) {
@@ -841,6 +861,13 @@ function libSets(s) {
 /* Build every session for one day of one week. */
 var sessCache = {};
 function sessionsFor(week) {
+  if (inRehab()) {
+    var rk = "r" + week;
+    if (sessCache[rk]) return sessCache[rk].v;
+    var rv = rehabWeek(week);
+    sessCache[rk] = { k: rk, v: rv };
+    return rv;
+  }
   var st0 = strengthFor(week);
   var ck = week + "|" + st0.sqKg + "|" + st0.tbKg;
   if (sessCache[week] && sessCache[week].k === ck) return sessCache[week].v;
@@ -1012,6 +1039,105 @@ function dayProgress(week, dk) {
     });
   });
   return { done: done, total: tot };
+}
+
+/* ---------------- rebuild block ---------------- */
+
+/* Four weeks of back and core work. Holds and rounds climb; the shapes do not
+   change, which is the point — trunk endurance responds to repetition. */
+var REHAB = [
+  { load: "Settle", hold: "8 s", rounds: 3, walk: "15 min", full: false, load3: false,
+    focus: "Calm it down. Nothing should hurt during the session or the next morning." },
+  { load: "Settle", hold: "10 s", rounds: 3, walk: "20 min", full: false, load3: true,
+    focus: "Same shapes, longer holds. Add the carries if week 1 stayed quiet." },
+  { load: "Build", hold: "10 s", rounds: 4, walk: "25 min", full: true, load3: true,
+    focus: "Side planks come off the knees and the hinge takes real load." },
+  { load: "Test", hold: "12 s", rounds: 4, walk: "30 min", full: true, load3: true,
+    focus: "Consolidate, then run Saturday's readiness checks before you jump again." }
+];
+
+function rehabSession(id, title, meta, list) {
+  return {
+    id: id, title: title, meta: meta, hi: 0,
+    items: list.map(function (e, i) {
+      return {
+        kind: "ex", key: id + ":" + i, text: e[0], sets: e[1], reps: e[2],
+        hasSets: true, hiPer: 0, detail: e[1] + " x " + e[2] + (e[3] ? "  ·  " + e[3] : ""),
+        loggable: !!e[4], sugg: null
+      };
+    })
+  };
+}
+
+function rehabWeek(week) {
+  var R = REHAB[week - 1] || REHAB[0];
+  var r = R.rounds, hold = R.hold;
+  var sideplank = R.full ? "Side plank" : "Side plank, knees down";
+  var hinge = R.load3 ? "Kettlebell deadlift" : "Hip hinge with a dowel";
+
+  var core = rehabSession("core", "Core endurance", "~20 min", [
+    ["Modified curl-up", r, "6", "hold " + hold + " · hands under the low back, one knee bent"],
+    [sideplank, r, "4 / side", "hold " + hold],
+    ["Bird dog", r, "6 / side", "hold " + hold + " · ribs down, no twist"],
+    ["Glute bridge", 3, "12", "squeeze at the top, no arching"],
+    ["Dead bug", 3, "8 / side", "low back stays flat on the floor"]
+  ]);
+  var walk = function (extra) {
+    return rehabSession("walk", "Walk", R.walk, [["Easy walk", 1, R.walk, extra || "brisk, comfortable, no pain"]]);
+  };
+  var mobility = rehabSession("mob", "Mobility", "~10 min", [
+    ["Cat-cow", 2, "8", "slow, through a pain-free range"],
+    ["Seated 90/90 hip rotation", 2, "6 / side"],
+    ["Kneeling hip flexor stretch", 2, "30 s / side", "tight hips make the back work harder"],
+    ["Hamstring stretch", 2, "30 s / side"]
+  ]);
+  var hips = rehabSession("hips", "Hips and glutes", "~20 min", [
+    ["Glute bridge march", 3, "10 / side", "hips stay level"],
+    ["Clamshell", 3, "15 / side"],
+    ["Side-lying leg raise", 3, "12 / side"],
+    ["Seated 90/90 hip rotation", 2, "6 / side"],
+    ["Kneeling hip flexor stretch", 2, "30 s / side"]
+  ]);
+  var carry = rehabSession("carry", "Hinge and carry", "~25 min", [
+    [hinge, 3, "8", R.load3 ? "light. Hips back, spine neutral, no rounding" : "no weight yet — groove the pattern", R.load3],
+    ["Suitcase carry", 3, "20 m / side", R.load3 ? "one side only — the trunk fights the lean" : "bodyweight walk, arms by your side", R.load3],
+    ["Farmer carry", 3, "30 m", R.load3 ? "tall, ribs down" : "", R.load3],
+    ["Pallof press", 3, "10 / side", "anti-rotation, slow"],
+    ["Bird dog", 2, "6 / side", "hold " + hold]
+  ]);
+  var full = rehabSession("full", "Full body, light", "~30 min", [
+    ["Goblet squat to a box", 3, "8", "sit to the box, stand tall", true],
+    ["Incline push-up", 3, "10"],
+    ["Chest-supported row", 3, "10", "", true],
+    ["Farmer carry", 3, "30 m", "", true],
+    [sideplank, 2, "4 / side", "hold " + hold]
+  ]);
+  var rest = {
+    id: "rest", title: "Rest", meta: "free day", hi: 0,
+    items: [{ kind: "note", text: "Nothing today. Walk if you feel like it. Backs settle on the days you leave them alone." }]
+  };
+
+  var out = {
+    mon: [core, walk()],
+    tue: [hips, walk()],
+    wed: [core, mobility],
+    thu: [carry],
+    fri: [walk("the most useful thing you will do all week"), mobility],
+    sat: R.full ? [full, walk()] : [hips, walk()],
+    sun: [rest]
+  };
+
+  if (week === 4) {
+    out.sat = [rehabSession("test", "Readiness test", "all must be clean", [
+      ["Side plank hold", 1, "45 s / side", "full, off the knees"],
+      ["Bird dog", 1, "10 / side", "controlled, no wobble"],
+      ["Bodyweight squat", 1, "20"],
+      ["Suitcase carry", 1, "30 m / side", "20 kg or so", true],
+      ["Single-leg hop", 1, "10 / leg", "the first real impact — stop at any symptom"],
+      ["Seven clear days", 1, "1", "no back pain in ordinary life for a week"]
+    ]), walk()];
+  }
+  return out;
 }
 
 /* ---------------- which session sits on which weekday ---------------- */
@@ -1489,22 +1615,27 @@ function restGuideHTML(week, dk) {
 }
 
 function viewToday() {
-  var week = S.ui.w, dk = S.ui.d, W = P.weeks[week - 1];
+  var week = S.ui.w, dk = S.ui.d;
+  var W = inRehab() ? null : P.weeks[week - 1];
   var ss = slotSessions(week, dk), D = day(week, dk);
   var pr = dayProgress(week, dk);
   var isRest = pr.total === 0;
   var h = "";
 
-  if (/DELOAD/i.test(W.load)) {
+  if (inRehab()) {
+    var R = REHAB[week - 1] || REHAB[0];
+    h += '<div class="alert acc"><b>Back rebuild, week ' + week + " of " + REHAB.length + ".</b> " +
+      esc(R.focus) + "</div>";
+  } else if (/DELOAD/i.test(W.load)) {
     h += '<div class="alert warn"><b>Deload week.</b> Loads drop to ' + Math.round(P.strength[week - 1].squat_pct * 100) + '%, jump volume roughly halves. This is a real down week, not a copy of last week.</div>';
   }
-  if (WINDOWWK.indexOf(week) >= 0 && dk === "sat") {
+  if (!inRehab() && WINDOWWK.indexOf(week) >= 0 && dk === "sat") {
     h += '<div class="alert acc"><b>Dunk window.</b> Full 20 min warm-up, 3 minutes between attempts. Stop when two attempts in a row are clearly below your best of the day.</div>';
   }
 
   var qt = quoteFor(week, dk);
   h += '<section class="blk quote"><i></i><p>' + esc(qt[0]) + "</p><cite>" + esc(qt[1]) + "</cite></section>";
-  if (week === 1 && ["tue", "wed", "thu", "fri"].indexOf(dk) >= 0) {
+  if (!inRehab() && week === 1 && ["tue", "wed", "thu", "fri"].indexOf(dk) >= 0) {
     h += '<div class="alert acc">Week 1 is shifted. Monday\'s lifting is already done, so the jump day moves to Wednesday — 48 hours later — and the explosive session takes Friday. From week 2, Monday is the jump day.</div>';
   }
   var dm = dayMinutes(week, dk);
@@ -1565,7 +1696,7 @@ function posForDate(dt) {
   var diff = Math.round((new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()) - sd) / 86400000);
   if (diff < 0) return null;
   var w = Math.floor(diff / 7) + 1;
-  if (w > 24) return null;
+  if (w > NWEEKS()) return null;
   return { w: w, d: DAYS[diff % 7] };
 }
 
@@ -1607,8 +1738,8 @@ function viewCal() {
       : pr.done > 0 ? "part"
       : "todo";
     if (!rest) { schedThis++; if (state === "done") doneThis++; }
-    var win = WINDOWWK.indexOf(pos.w) >= 0 && pos.d === "sat";
-    var dl = /DELOAD/i.test(P.weeks[pos.w - 1].load);
+    var win = !inRehab() && WINDOWWK.indexOf(pos.w) >= 0 && pos.d === "sat";
+    var dl = !inRehab() && /DELOAD/i.test(P.weeks[pos.w - 1].load);
     h += '<button class="cday ' + state + (isToday ? " now" : "") + (win ? " win" : "") + (dl ? " dl" : "") +
       '" data-act="goday" data-w="' + pos.w + '" data-d="' + pos.d + '"' +
       ' aria-label="' + dnum + " " + MONTHS[mo] + ", week " + pos.w + " " + DAYFULL[pos.d] + '">' +
@@ -1623,12 +1754,25 @@ function viewCal() {
     '<span><i class="k part"></i>started</span>' +
     '<span><i class="k todo"></i>to do</span>' +
     '<span><i class="k rest"></i>rest</span>' +
-    '<span><i class="k win"></i>dunk window</span>' +
-    '<span><i class="k dl"></i>deload week</span></div>';
+    (inRehab() ? "" :
+      '<span><i class="k win"></i>dunk window</span>' +
+      '<span><i class="k dl"></i>deload week</span>') + "</div>";
   h += '<div class="sub">' + doneThis + " of " + schedThis + " sessions completed this month. Tap any day to open it.</div></section>";
 
   /* the selected week, underneath */
-  var week = S.ui.pickW, W = P.weeks[week - 1], st = strengthFor(week);
+  var week = S.ui.pickW;
+  if (inRehab()) {
+    var R = REHAB[week - 1] || REHAB[0];
+    h += '<section class="blk"><span class="eyebrow">Week ' + week + '</span><div class="panel lift"><div class="hi">' +
+      '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">' +
+      '<span class="chip phase">Back rebuild</span><span class="chip rehab">' + esc(R.load) + "</span></div>" +
+      '<div style="margin-top:9px;font-size:13.5px;line-height:1.5">' + esc(R.focus) + "</div>" +
+      '<div class="barlab" style="margin-top:11px"><span>holds ' + esc(R.hold) + " · " + R.rounds +
+      " rounds</span><span>walk " + esc(R.walk) + "</span></div></div></div></section>";
+    h += dayListHTML(week, tp);
+    return h;
+  }
+  var W = P.weeks[week - 1], st = strengthFor(week);
   var hi = weekHI(week), cap = W.cap;
   h += '<section class="blk"><span class="eyebrow">Week ' + week + '</span><div class="panel lift"><div class="hi">' +
     '<div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">' +
@@ -1641,7 +1785,19 @@ function viewCal() {
     '<div class="barlab"><span>' + hi.total + " of " + hi.plan + " hard jumps done</span><span>cap " + cap + "</span></div>" +
     "</div></div></section>";
 
-  h += '<section class="blk"><span class="eyebrow">Days</span><div class="panel daylist">';
+  h += dayListHTML(week, tp);
+
+  h += '<section class="blk"><span class="eyebrow">Loads this week</span><div class="panel kv">' +
+    "<div>Back squat</div><div>" + esc(st.row.squat_scheme) + " @ " + (st.sqKg ? fmtKg(st.sqKg) + " kg" : "—") + "</div>" +
+    "<div>Trap-bar deadlift</div><div>" + esc(st.row.tb_scheme) + " @ " + (st.tbKg ? fmtKg(st.tbKg) + " kg" : "—") + "</div>" +
+    "<div>Squat intensity</div><div>" + Math.round(st.row.squat_pct * 100) + "% of " + (st.sq1 ? fmtKg(st.sq1) + " kg" : "—") + "</div>" +
+    "</div><div class=\"sub\">" + esc(st.row.notes) + "</div></section>";
+
+  return h;
+}
+
+function dayListHTML(week, tp) {
+  var h = '<section class="blk"><span class="eyebrow">Days</span><div class="panel daylist">';
   DAYS.forEach(function (dk) {
     var pr = dayProgress(week, dk), ss = slotSessions(week, dk);
     var titles = ss.map(function (s) { return s.title; }).join(" + ");
@@ -1656,15 +1812,7 @@ function viewCal() {
       fmtMins(dayMinutes(week, dk)) + (hip ? " · " + hact + "/" + hip + " jumps" : "") + "</s></span>" +
       "</button>";
   });
-  h += "</div></section>";
-
-  h += '<section class="blk"><span class="eyebrow">Loads this week</span><div class="panel kv">' +
-    "<div>Back squat</div><div>" + esc(st.row.squat_scheme) + " @ " + (st.sqKg ? fmtKg(st.sqKg) + " kg" : "—") + "</div>" +
-    "<div>Trap-bar deadlift</div><div>" + esc(st.row.tb_scheme) + " @ " + (st.tbKg ? fmtKg(st.tbKg) + " kg" : "—") + "</div>" +
-    "<div>Squat intensity</div><div>" + Math.round(st.row.squat_pct * 100) + "% of " + (st.sq1 ? fmtKg(st.sq1) + " kg" : "—") + "</div>" +
-    "</div><div class=\"sub\">" + esc(st.row.notes) + "</div></section>";
-
-  return h;
+  return h + "</div></section>";
 }
 
 /* ---------------- render: Progress ---------------- */
@@ -1748,7 +1896,62 @@ function chartSVG() {
   return s + "</svg>";
 }
 
+function rehabDone() {
+  var done = 0, tot = 0;
+  for (var n = 1; n <= REHAB.length; n++) {
+    DAYS.forEach(function (dk) {
+      var pr = dayProgress(n, dk);
+      if (!pr.total) return;
+      tot++;
+      if ((S.rehab[n] && S.rehab[n].d && S.rehab[n].d[dk] && S.rehab[n].d[dk].done) || pr.done >= pr.total) done++;
+    });
+  }
+  return { done: done, total: tot };
+}
+
+function viewRehabProg() {
+  var p = rehabDone();
+  var pct = p.total ? Math.round(p.done / p.total * 100) : 0;
+  var h = '<section class="blk"><span class="eyebrow">Back rebuild</span><div class="panel lift">' +
+    '<div class="stat3">' +
+    '<div><div class="v">' + p.done + "/" + p.total + '</div><div class="k">sessions</div></div>' +
+    '<div><div class="v">' + pct + '%</div><div class="k">complete</div></div>' +
+    '<div><div class="v">' + REHAB.length + '</div><div class="k">weeks</div></div>' +
+    "</div>" +
+    '<div class="bar" style="margin:0 12px 12px"><i class="fill" style="width:' + pct + '%"></i></div>' +
+    "</div></section>";
+
+  h += '<section class="blk"><span class="eyebrow">Before you jump again</span><div class="panel">' +
+    '<div class="hi"><div class="note">All six, clean and symptom-free. They are the Saturday session of week 4 — tick them there and they count here.</div></div>' +
+    '<div class="exlist">' +
+    [["Side plank", "45 s each side, off the knees"],
+     ["Bird dog", "10 controlled reps each side"],
+     ["Bodyweight squat", "20 reps, no back pain"],
+     ["Suitcase carry", "30 m each side with about 20 kg"],
+     ["Single-leg hop", "10 each leg — the first real impact"],
+     ["Seven clear days", "no back pain in ordinary life for a week"]].map(function (r) {
+      return '<div class="r"><span class="n">' + esc(r[0]) + "<em>" + esc(r[1]) + "</em></span></div>";
+    }).join("") + "</div></section>";
+
+  h += '<section class="blk"><span class="eyebrow">When you are ready</span>' +
+    '<button class="btn ' + (pct >= 80 ? "pri" : "") + '" data-act="startjump">Start the jump programme</button>' +
+    '<div class="sub">This clears the old jump log and starts it again at week 1. Four weeks off is past the point where picking up mid-block makes sense — the programme says so itself.</div></section>';
+
+  h += '<section class="blk"><span class="eyebrow">Stop signals</span><div class="panel">' +
+    '<details class="acc" open><summary>See someone today, not next week</summary><div class="body">' +
+    "<p>Numbness around the groin or inner thighs, any loss of bladder or bowel control, or leg weakness that is getting worse. These are not training problems. Stop and get urgent medical care.</p>" +
+    "</div></details>" +
+    '<details class="acc"><summary>Back off and reassess</summary><div class="body">' +
+    "<p>Pain running below the knee, pins and needles, or anything that is worse the morning after. Drop back a week and if it does not settle in a few days, get it looked at.</p>" +
+    "</div></details>" +
+    '<details class="acc"><summary>Carry on</summary><div class="body">' +
+    "<p>Mild stiffness that eases as you move, and muscle soreness that is gone inside 48 hours. That is the block working.</p>" +
+    "</div></details></div></section>";
+  return h;
+}
+
 function viewProg() {
+  if (inRehab()) return viewRehabProg();
   var week = S.ui.pickW, bt = bestTouch();
   var reach = +S.settings.reach, dunk = +S.settings.dunkTouch;
   var gap = bt.v ? dunk - bt.v : null;
@@ -1866,7 +2069,28 @@ function viewProg() {
 /* ---------------- render: Guide ---------------- */
 
 function viewGuide() {
-  var h = '<section class="blk"><span class="eyebrow">Phase map</span><div class="panel">';
+  var h = "";
+  if (inRehab()) {
+    h += '<section class="blk"><span class="eyebrow">Why this block exists</span><div class="panel">' +
+      '<details class="acc" open><summary>Endurance first, not strength</summary><div class="body">' +
+      "<p>A trunk that fails does so by fatiguing, not by being too weak. That is why the staples here are short holds repeated often rather than hard sets taken near failure. Curl-up, side plank and bird dog are the three with the most evidence behind them.</p>" +
+      "</div></details>" +
+      '<details class="acc"><summary>What is deliberately missing</summary><div class="body">' +
+      "<p>No sit-ups, no ab wheel, no loaded rounding of the back. The jump programme's own push day carries four sets of twenty-five sit-ups — repeated loaded spinal flexion, and the likeliest thing in it to have caused you trouble. When you go back to it, swap those for dead bugs or planks.</p>" +
+      "</div></details>" +
+      '<details class="acc"><summary>Why the hips get so much work</summary><div class="body">' +
+      "<p>Stiff hips and quiet glutes leave the back to do their job. Half of what looks like a weak core is a hip problem, which is why the bridges, clamshells and 90/90 work sit alongside the trunk holds.</p>" +
+      "</div></details>" +
+      '<details class="acc"><summary>Walking</summary><div class="body">' +
+      "<p>The single most useful thing in this block, and the easiest to skip. Brisk and comfortable, most days, building from fifteen minutes to thirty.</p>" +
+      "</div></details>" +
+      '<details class="acc"><summary>How hard should this feel</summary><div class="body">' +
+      "<p>Mild stiffness that eases as you move is fine. Pain during a movement, pain below the knee, pins and needles, or anything worse the next morning means back off that exercise. Nothing here should be a grind.</p>" +
+      "</div></details></div>" +
+      '<div class="sub">This is general conditioning, not a diagnosis. If you have not had the injury looked at, do that first — and if anything here reproduces your pain, stop and get it assessed.</div></section>';
+  }
+
+  h += '<section class="blk"><span class="eyebrow">Phase map</span><div class="panel">';
   P.phases.forEach(function (p, i) {
     var here = S.ui.w >= +p.weeks.split("-")[0] && S.ui.w <= +p.weeks.split("-")[1];
     h += '<div class="ex"' + (here ? ' style="box-shadow:inset 3px 0 0 var(--accent)"' : "") + ">" +
@@ -1999,6 +2223,12 @@ function openSheet() {
     ["auto", "light", "dark"].map(function (t) { return '<option value="' + t + '"' + (s.theme === t ? " selected" : "") + ">" + t + "</option>"; }).join("") +
     "</select></div></div>" +
     '<div class="syncline"><span class="syncdot' + (db ? " on" : "") + '"></span>' + (db ? "Synced to your account" : "Saved on this device") + "</div></section>" +
+    '<section class="blk"><span class="eyebrow">Programme</span><div class="panel"><div class="hi">' +
+    '<div class="note">' + (inRehab()
+      ? "You are in the four-week back rebuild. The jump programme unlocks from the Progress tab when the readiness checks are clean."
+      : "You are in the 24-week jump programme.") + "</div></div></div>" +
+    '<button class="btn ghost" data-act="startover" style="margin-top:10px">Start over</button>' +
+    '<div class="sub">Clears both logs and returns you to week 1 of the back rebuild.</div></section>' +
     '<section class="blk"><span class="eyebrow">Backup</span><div style="display:flex;gap:8px">' +
     '<button class="btn" data-act="export">Export</button>' +
     '<label class="btn" style="cursor:pointer">Import<input type="file" accept="application/json,.json" data-act="import" style="position:absolute;width:1px;height:1px;opacity:0"></label>' +
@@ -2019,8 +2249,16 @@ function applyTheme() {
 
 function paintHeader() {
   var week = S.ui.tab === "today" ? S.ui.w : S.ui.pickW;
-  var W = P.weeks[week - 1];
   el("hWk").textContent = "Week " + week;
+  if (inRehab()) {
+    var R = REHAB[week - 1] || REHAB[0];
+    el("hDy").textContent = S.ui.tab === "today" ? DAYNM[S.ui.d] : "Rebuild";
+    el("hChips").innerHTML = '<span class="chip rehab">Rebuild ' + week + "/" + REHAB.length + "</span>";
+    el("prevd").style.visibility = S.ui.tab === "today" ? "visible" : "hidden";
+    el("nextd").style.visibility = S.ui.tab === "today" ? "visible" : "hidden";
+    return;
+  }
+  var W = P.weeks[week - 1];
   el("hDy").textContent = S.ui.tab === "today" ? DAYNM[S.ui.d] : W.phase.replace(/^\d+\s*/, "");
   var c = "";
   if (S.ui.tab === "today") {
@@ -2049,7 +2287,7 @@ function render() {
 function stepDay(dir) {
   var i = DAYS.indexOf(S.ui.d) + dir;
   if (i < 0) { if (S.ui.w > 1) { S.ui.w--; S.ui.d = DAYS[6]; } }
-  else if (i > 6) { if (S.ui.w < 24) { S.ui.w++; S.ui.d = DAYS[0]; } }
+  else if (i > 6) { if (S.ui.w < NWEEKS()) { S.ui.w++; S.ui.d = DAYS[0]; } }
   else S.ui.d = DAYS[i];
   S.ui.pickW = S.ui.w;
   saveLocal(); render();
@@ -2114,6 +2352,28 @@ document.addEventListener("click", function (ev) {
     }
     case "moveday": swapDays(S.ui.w, S.ui.d, b.dataset.d); render(); break;
     case "resetorder": resetOrder(S.ui.w); render(); break;
+    case "startjump": {
+      if (!confirm("Start the 24-week jump programme from week 1?\n\nYour rebuild log is kept. The old jump log is cleared so you start clean.")) break;
+      S.weeks = {};
+      S.settings.phase = "jump";
+      S.settings.start = mondayOf(new Date());
+      S.settings.updatedAt = Date.now();
+      sessCache = {};
+      S.ui.w = 1; S.ui.d = "mon"; S.ui.pickW = 1; S.ui.tab = "today"; S.ui.month = null;
+      pushSettings(); saveLocal(); render();
+      break;
+    }
+    case "startover": {
+      if (!confirm("Start over?\n\nThis clears every logged session in both blocks and puts you back at week 1 of the back rebuild. It cannot be undone — export first if you want a copy.")) break;
+      S.weeks = {}; S.rehab = {};
+      S.settings.phase = "rehab";
+      S.settings.start = mondayOf(new Date());
+      S.settings.updatedAt = Date.now();
+      sessCache = {};
+      S.ui.w = 1; S.ui.d = "mon"; S.ui.pickW = 1; S.ui.tab = "today"; S.ui.month = null;
+      pushSettings(); saveLocal(); closeSheet();
+      break;
+    }
     case "tstop": stopTimer(); break;
     case "finish": {
       var Df = day(S.ui.w, S.ui.d);
@@ -2205,10 +2465,14 @@ document.addEventListener("input", function (ev) {
 /* ---------------- boot ---------------- */
 
 loadLocal();
+/* Back injury after week 1: the app now opens on the rebuild block. */
+if (!S.settings.phase) {
+  S.settings.phase = "rehab";
+  S.settings.start = mondayOf(new Date());
+  saveLocal();
+}
 if (!S.settings.start) {
-  var d = new Date(); d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-  S.settings.start = isoDate(d);
+  S.settings.start = mondayOf(new Date());
   saveLocal();
 }
 var pos = todayPos();
